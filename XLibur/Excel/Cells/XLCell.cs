@@ -700,7 +700,17 @@ internal sealed class XLCell : XLStylizedBase, IXLCell, IXLStylized
 
     public bool IsMerged()
     {
-        return Worksheet.Internals.MergedRanges.Contains(this);
+        // Short-circuit on the count before touching the range index. This runs on every
+        // cell.Value / cell.FormulaA1 assignment via IsInferiorMergedCell, and the overwhelmingly
+        // common case is a sheet with no merged ranges at all — where Contains cannot be true,
+        // but still costs a boxed address plus an iterator chain to establish that.
+        var mergedRanges = Worksheet.Internals.MergedRanges;
+        if (mergedRanges.Count == 0)
+            return false;
+
+        // Pass the address as a struct: the IXLCell overload would box it.
+        var address = Address;
+        return mergedRanges.Contains(in address);
     }
 
     public IXLRange? MergedRange()

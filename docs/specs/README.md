@@ -1,8 +1,10 @@
-# XLibur Improvement Roadmap — Top 10 Specs
+# XLibur Improvement Roadmap
 
-Ten prioritized, self-contained specs covering features, compatibility, architecture, and performance (memory + read/write times). Each spec is written to be handed to an independent agent/model: it states the problem with measured numbers, points at the exact files, prescribes a design, breaks the work into PR-sized tasks, and defines measurable acceptance criteria.
+Eleven prioritized, self-contained specs covering features, compatibility, architecture, and performance (memory + read/write times). Each spec is written to be handed to an independent agent/model: it states the problem with measured numbers, points at the exact files, prescribes a design, breaks the work into PR-sized tasks, and defines measurable acceptance criteria.
 
-Grounding: these were derived from a July 2026 survey of the codebase (architecture, feature inventory vs Excel, benchmark artifacts under `BenchmarkDotNet.Artifacts/results/`). Headline baselines: save 50K rows ≈ 1.0–1.1 s / **543 MB allocated**; load+read 250K×15 ≈ 5.6 s / 1.68 GB after PR #171; XLibur is already ~3× faster and ~6× leaner than upstream ClosedXML on save.
+Specs 01–10 are the original top-ten set; spec 11 is a follow-on that came out of implementing spec 03 (see below).
+
+Grounding: specs 01–10 were derived from a July 2026 survey of the codebase (architecture, feature inventory vs Excel, benchmark artifacts under `BenchmarkDotNet.Artifacts/results/`). Headline baselines: save 50K rows ≈ 1.0–1.1 s / **543 MB allocated**; load+read 250K×15 ≈ 5.6 s / 1.68 GB after PR #171; XLibur is already ~3× faster and ~6× leaner than upstream ClosedXML on save.
 
 ## The list
 
@@ -18,13 +20,18 @@ Grounding: these were derived from a July 2026 survey of the codebase (architect
 | 08 | [LET / LAMBDA](08-let-lambda.md) | Feature | L | Proposed | Single owner (engine core) |
 | 09 | [Threaded comments + round-trip fidelity](09-threaded-comments-roundtrip.md) | Feature · Compat | M | Proposed | Comments vs fidelity-audit split |
 | 10 | [Chart formatting depth](10-chart-formatting-depth.md) | Feature | L | Proposed | 4 PRs, 2–3 independent |
+| 11 | [Create-path allocation reduction](11-create-path-allocations.md) | Perf (write) | M | ✅ **Tasks 1–4 done** | Task 4 lands in 11; 05 rebases |
+
+Spec 11 was added after spec 03 landed: 03 halved the *save* phase and showed the rest of it is
+`System.IO.Packaging`, leaving the *create* phase as 72% of the write benchmark. It is a follow-on,
+not part of the original ten.
 
 Spec 02 delivered **−16.5% load time and −61.5% allocations** (4.750 s / 1020.92 MB → 3.968 s /
 392.88 MB on the 250K×15 benchmark). It also produced two findings that change other specs: a
 correction to spec 03's number-formatting task, and a reusable `XmlReader.ReadValueChunk` technique
 for the IO layer. Both are recorded in spec 02's Results section.
 
-## Why these ten
+## Why these ten (01–10)
 
 **Performance (specs 02, 03, 04, 05).** The write cell-loop and the sheetData parse have both had a round of tuning; what remains, in measured order: per-cell string allocations on load (`<v>` + attributes + SST DOM), the ~543 MB formatted save (number formatting, inherited-style resolution, StyleKey hashing), the full-workbook-recalc cliff when reading one dirty formula cell (can build a 176 MB dependency tree to answer one read), and O(all-ranges·log) work per single row insert. Specs 02–05 attack each with concrete targets.
 
@@ -39,6 +46,7 @@ for the IO layer. Both are recorded in spec 02's Results section.
 ```
 Wave 1 (independent, start anytime):
   02 load allocations ✅ done · 03 save allocations · 07 function waves A–F · 09 threaded comments
+  11 Tasks 1–4 ✅ done (−28.8% on the write benchmark; bulk styling −86% per cell)
 Wave 2 (after 03 lands, or coordinated):
   01 streaming write (Phase 1 seam shared with 03's territory) · 06 encryption · 10 charts PR1
 Wave 3 (single-owner, correctness-critical — don't parallelize internally):
@@ -48,7 +56,7 @@ Wave 3 (single-owner, correctness-critical — don't parallelize internally):
 **Read spec 02's Results section before starting 03** — it corrects 03's number-formatting task
 and describes an allocation technique that applies to the rest of the IO layer.
 
-Conflict map: 01↔03 (`SheetDataWriter`), 04↔08 (evaluation stack / `CalcContext`), 07 waves B↔C (`Statistical.cs`). Everything else is disjoint.
+Conflict map: 01↔03 (`SheetDataWriter`), 04↔08 (evaluation stack / `CalcContext`), 07 waves B↔C (`Statistical.cs`). Everything else is disjoint. **Spec 05 must rebase onto spec 11**: 11's Task 4 rewrote bulk style propagation (`XLStylizedBase.ModifyStyle` / `SetStyle`), which is 05's territory.
 
 ## Ground rules for implementing agents
 

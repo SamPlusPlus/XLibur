@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using XLibur.Excel.Coordinates;
+using XLibur.Excel.Ranges;
 
 namespace XLibur.Excel.Patterns;
 
@@ -178,6 +180,40 @@ internal class Quadrant
             yield return range;
     }
 
+    /// <summary>
+    /// Whether any range in this quadrant or its children covers the address. Same traversal as
+    /// <see cref="GetIntersectedRanges(IXLAddress)"/>, but as a plain recursion so that answering
+    /// a yes/no question does not allocate an iterator per level. Used by the merged-range test
+    /// that runs on every cell write.
+    /// </summary>
+    public bool CoversAnyRange(in XLAddress address)
+    {
+        if (_ranges is not null)
+        {
+            foreach (var range in _ranges.Values)
+            {
+                if (XLAddressableHelper.Contains(range, in address))
+                    return true;
+            }
+        }
+
+        var children = Children;
+        if (children is null)
+            return false;
+
+        // Indexed rather than foreach: Children is typed as IReadOnlyList<Quadrant>, so a foreach
+        // would allocate an interface enumerator at every level of the recursion — which is the
+        // one thing this method exists to avoid.
+        for (var i = 0; i < children.Count; i++)
+        {
+            var childQuadrant = children[i];
+            if (childQuadrant.Covers(in address) && childQuadrant.CoversAnyRange(in address))
+                return true;
+        }
+
+        return false;
+    }
+
     private IEnumerable<IXLAddressable> GetIntersectedRangesFromChildren(IXLRangeAddress rangeAddress)
     {
         if (Children == null)
@@ -304,6 +340,18 @@ internal class Quadrant
                MaximumColumn >= rangeAddress.LastAddress.ColumnNumber &&
                MinimumRow <= rangeAddress.FirstAddress.RowNumber &&
                MaximumRow >= rangeAddress.LastAddress.RowNumber;
+    }
+
+    /// <summary>
+    /// Check if the current quadrant covers the specified address. Overload taking the concrete
+    /// struct, so <see cref="CoversAnyRange"/> does not box on every level of the recursion.
+    /// </summary>
+    private bool Covers(in XLAddress address)
+    {
+        return MinimumColumn <= address.ColumnNumber &&
+               MaximumColumn >= address.ColumnNumber &&
+               MinimumRow <= address.RowNumber &&
+               MaximumRow >= address.RowNumber;
     }
 
     /// <summary>
