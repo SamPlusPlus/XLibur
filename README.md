@@ -14,10 +14,9 @@ XLibur is a .NET 8+ library for reading, manipulating, and writing Excel 2007+
 (.xlsx, .xlsm) files. It provides an intuitive interface over the underlying
 [OpenXML](https://github.com/OfficeDev/Open-XML-SDK) API.
 
-XLibur is a fork of [ClosedXML v0.105.0](https://github.com/ClosedXML/ClosedXML/)
+XLibur forked from [ClosedXML v0.105.0](https://github.com/ClosedXML/ClosedXML/)
 (May 2025), created to ship patches and improvements that didn't land upstream.
-Namespaces are prefixed with `XLibur` to avoid conflicts with ClosedXML if both
-are referenced in the same project.
+Namespaces are prefixed with `XLibur`.
 
 ## Should I use this?
 
@@ -31,8 +30,6 @@ are referenced in the same project.
 - **Reduced memory usage and performance gains** - particularly for workbooks with many formatted cells
 - **Bug fixes** — several outstanding community issues resolved that are pending upstream
 - **Community PR/enhancements** - several community contriubtions or requests have been merged in to this codebase.
-
-> ⚠️ XLibur has limited real-world production history. Use in critical systems at your own discretion.
 
 ## Migration from ClosedXML
 
@@ -145,20 +142,6 @@ Published benchmark results are available at
 [![XLibur benchmark results](docs/benchmark_snapshot.jpg)](https://jafin.github.io/XLBench/charts.html)
 
 [![XLibur benchmark memory results](docs/benchmark_snapshot_memory.jpg)](https://jafin.github.io/XLBench/charts.html)
-
-Run benchmarks yourself (XLibur vs ClosedXML comparison):
-
-```sh
-# List available benchmarks
-dotnet run -c Release --project XLibur.Benchmarks/XLibur.Benchmarks.csproj -- --list flat
-
-# Run all benchmarks
-dotnet run -c Release --project XLibur.Benchmarks/XLibur.Benchmarks.csproj -- --filter *
-
-# Run a specific benchmark class
-dotnet run -c Release --project XLibur.Benchmarks/XLibur.Benchmarks.csproj -- --filter '*XLiburWorkbookBenchmarks*'
-dotnet run -c Release --project XLibur.Benchmarks/XLibur.Benchmarks.csproj -- --filter '*ClosedXmlWorkbookBenchmarks*'
-```
 
 ## Developer guidelines
 
