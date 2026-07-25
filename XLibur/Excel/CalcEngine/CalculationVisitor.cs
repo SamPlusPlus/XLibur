@@ -44,45 +44,6 @@ internal sealed class CalculationVisitor : IFormulaVisitor<CalcContext, AnyValue
         };
     }
 
-    /// <summary>
-    /// Evaluates the <c>#</c> spill-range operator (e.g. <c>A1#</c>): resolves the operand to a
-    /// spill anchor and returns a <see cref="Reference"/> to that dynamic array's current
-    /// footprint. Returns <c>#REF!</c> when the operand cell is not a spill anchor.
-    /// </summary>
-    private static AnyValue EvaluateSpillRange(CalcContext context, AnyValue operand)
-    {
-        // The operand of `#` must resolve to a single-cell reference: the spill anchor. A
-        // multi-cell area (e.g. A1:B3#) is not a valid anchor, so it is a #REF!.
-        if (!operand.TryPickArea(out var anchorArea, out var error))
-            return error;
-
-        if (anchorArea.FirstAddress.RowNumber != anchorArea.LastAddress.RowNumber ||
-            anchorArea.FirstAddress.ColumnNumber != anchorArea.LastAddress.ColumnNumber)
-            return XLError.CellReference;
-
-        var sheet = anchorArea.Worksheet as XLWorksheet ?? context.Worksheet;
-        var anchorRow = anchorArea.FirstAddress.RowNumber;
-        var anchorColumn = anchorArea.FirstAddress.ColumnNumber;
-
-        // Force the anchor to be current before reading its footprint: for a dirty anchor this
-        // throws GettingDataException so the calc chain evaluates the anchor (spilling it and
-        // updating its Range) before this formula. The returned value itself is unused.
-        _ = context.GetCellValue(sheet, anchorRow, anchorColumn);
-
-        var formula = sheet.Internals.CellsCollection.FormulaSlice.Get(new XLSheetPoint(anchorRow, anchorColumn));
-        if (formula is null || !formula.IsDynamicArray)
-            return XLError.CellReference; // #REF! — the cell is not a spill anchor.
-
-        var footprint = formula.Range;
-        if (footprint == default)
-            return XLError.CellReference; // Anchor exists but hasn't produced a footprint yet.
-
-        var rangeAddress = new XLRangeAddress(
-            new XLAddress(sheet, footprint.TopRow, footprint.LeftColumn, true, true),
-            new XLAddress(sheet, footprint.BottomRow, footprint.RightColumn, true, true));
-        return new Reference(rangeAddress);
-    }
-
     public AnyValue Visit(CalcContext context, BinaryNode node)
     {
         var leftArg = node.LeftExpression.Accept(context, this);
@@ -159,6 +120,45 @@ internal sealed class CalculationVisitor : IFormulaVisitor<CalcContext, AnyValue
 
     public AnyValue Visit(CalcContext context, FileNode node)
         => throw new InvalidOperationException("Node should never be visited.");
+
+    /// <summary>
+    /// Evaluates the <c>#</c> spill-range operator (e.g. <c>A1#</c>): resolves the operand to a
+    /// spill anchor and returns a <see cref="Reference"/> to that dynamic array's current
+    /// footprint. Returns <c>#REF!</c> when the operand cell is not a spill anchor.
+    /// </summary>
+    private static AnyValue EvaluateSpillRange(CalcContext context, AnyValue operand)
+    {
+        // The operand of `#` must resolve to a single-cell reference: the spill anchor. A
+        // multi-cell area (e.g. A1:B3#) is not a valid anchor, so it is a #REF!.
+        if (!operand.TryPickArea(out var anchorArea, out var error))
+            return error;
+
+        if (anchorArea.FirstAddress.RowNumber != anchorArea.LastAddress.RowNumber ||
+            anchorArea.FirstAddress.ColumnNumber != anchorArea.LastAddress.ColumnNumber)
+            return XLError.CellReference;
+
+        var sheet = anchorArea.Worksheet as XLWorksheet ?? context.Worksheet;
+        var anchorRow = anchorArea.FirstAddress.RowNumber;
+        var anchorColumn = anchorArea.FirstAddress.ColumnNumber;
+
+        // Force the anchor to be current before reading its footprint: for a dirty anchor this
+        // throws GettingDataException so the calc chain evaluates the anchor (spilling it and
+        // updating its Range) before this formula. The returned value itself is unused.
+        _ = context.GetCellValue(sheet, anchorRow, anchorColumn);
+
+        var formula = sheet.Internals.CellsCollection.FormulaSlice.Get(new XLSheetPoint(anchorRow, anchorColumn));
+        if (formula is null || !formula.IsDynamicArray)
+            return XLError.CellReference; // #REF! — the cell is not a spill anchor.
+
+        var footprint = formula.Range;
+        if (footprint == default)
+            return XLError.CellReference; // Anchor exists but hasn't produced a footprint yet.
+
+        var rangeAddress = new XLRangeAddress(
+            new XLAddress(sheet, footprint.TopRow, footprint.LeftColumn, true, true),
+            new XLAddress(sheet, footprint.BottomRow, footprint.RightColumn, true, true));
+        return new Reference(rangeAddress);
+    }
 
     private static bool TryResolveStructuredReference(
         CalcContext context,
