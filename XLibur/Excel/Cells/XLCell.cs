@@ -833,6 +833,15 @@ internal sealed class XLCell : XLStylizedBase, IXLCell, IXLStylized
         return CopyFrom(XLCellCopyHelper.GetTargetCell(otherCell, Worksheet));
     }
 
+    public IXLCell CopyFrom(IXLRangeBase rangeBase)
+        => XLCellCopyHelper.CopyFromRange(this, rangeBase);
+
+    public IXLCell CopyFrom(IXLCell otherCell, XLCellCopyOptions options)
+    {
+        CopyFromInternal((XLCell)otherCell, options);
+        return this;
+    }
+
     public IXLCell SetFormulaA1(string formula)
     {
         FormulaA1 = formula;
@@ -1058,9 +1067,6 @@ internal sealed class XLCell : XLStylizedBase, IXLCell, IXLStylized
         return formatCodes.TryGetValue(style.NumberFormat.NumberFormatId, out var format) ? format : string.Empty;
     }
 
-    public IXLCell CopyFrom(IXLRangeBase rangeBase)
-        => XLCellCopyHelper.CopyFromRange(this, rangeBase);
-
     private void ClearMerged()
         => XLCellCopyHelper.ClearMerged(this);
 
@@ -1081,12 +1087,6 @@ internal sealed class XLCell : XLStylizedBase, IXLCell, IXLStylized
 
     internal IXLCell CopyFromInternal(XLCell otherCell, XLCellCopyOptions options)
         => XLCellCopyHelper.CopyFromInternal(this, otherCell, options);
-
-    public IXLCell CopyFrom(IXLCell otherCell, XLCellCopyOptions options)
-    {
-        CopyFromInternal((XLCell)otherCell, options);
-        return this;
-    }
 
     internal void CopyDataValidation(XLCell otherCell, IXLDataValidation otherDv)
         => XLCellCopyHelper.CopyDataValidation(this, otherCell, otherDv);
