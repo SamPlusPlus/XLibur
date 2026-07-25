@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using XLibur.Excel;
 using XLibur.Fonts.SixLabors.V1;
@@ -86,8 +86,10 @@ public static class CreatePhaseProbe
 
         // Identical to SetCellValueDouble, so subtracting that probe isolates the styling.
         for (var r = 1; r <= Rows; r++)
-        for (var c = 1; c <= Cols; c++)
-            ws.SetCellValue(r, c, r * 1.5);
+        {
+            for (var c = 1; c <= Cols; c++)
+                ws.SetCellValue(r, c, r * 1.5);
+        }
 
         ws.Range(1, 1, Rows, Cols).Style.Font.Bold = true;
     }
@@ -97,8 +99,10 @@ public static class CreatePhaseProbe
         using var wb = new XLWorkbook();
         var ws = wb.AddWorksheet("s");
         for (var r = 1; r <= Rows; r++)
-        for (var c = 1; c <= Cols; c++)
-            _ = ws.Cell(r, c);
+        {
+            for (var c = 1; c <= Cols; c++)
+                _ = ws.Cell(r, c);
+        }
     }
 
     private static void CellValueDouble()
@@ -106,8 +110,10 @@ public static class CreatePhaseProbe
         using var wb = new XLWorkbook();
         var ws = wb.AddWorksheet("s");
         for (var r = 1; r <= Rows; r++)
-        for (var c = 1; c <= Cols; c++)
-            ws.Cell(r, c).Value = r * 1.5;
+        {
+            for (var c = 1; c <= Cols; c++)
+                ws.Cell(r, c).Value = r * 1.5;
+        }
     }
 
     private static void SetCellValueDouble()
@@ -115,8 +121,10 @@ public static class CreatePhaseProbe
         using var wb = new XLWorkbook();
         var ws = wb.AddWorksheet("s");
         for (var r = 1; r <= Rows; r++)
-        for (var c = 1; c <= Cols; c++)
-            ws.SetCellValue(r, c, r * 1.5);
+        {
+            for (var c = 1; c <= Cols; c++)
+                ws.SetCellValue(r, c, r * 1.5);
+        }
     }
 
     private static void CellValueString()
@@ -127,8 +135,10 @@ public static class CreatePhaseProbe
         // allocating a fresh string per cell.
         string[] pool = ["Active", "Pending", "Closed", "Review", "Draft"];
         for (var r = 1; r <= Rows; r++)
-        for (var c = 1; c <= Cols; c++)
-            ws.Cell(r, c).Value = pool[(r + c) % pool.Length];
+        {
+            for (var c = 1; c <= Cols; c++)
+                ws.Cell(r, c).Value = pool[(r + c) % pool.Length];
+        }
     }
 
     private static void CellValueDateTime()
@@ -137,8 +147,10 @@ public static class CreatePhaseProbe
         var ws = wb.AddWorksheet("s");
         var baseDate = new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
         for (var r = 1; r <= Rows; r++)
-        for (var c = 1; c <= Cols; c++)
-            ws.Cell(r, c).Value = baseDate.AddDays((r + c) % 1500);
+        {
+            for (var c = 1; c <= Cols; c++)
+                ws.Cell(r, c).Value = baseDate.AddDays((r + c) % 1500);
+        }
     }
 
     /// <summary>
@@ -153,8 +165,10 @@ public static class CreatePhaseProbe
         ws.Range(1, 1, 1, 4).Merge();
 
         for (var r = 2; r <= Rows + 1; r++)
-        for (var c = 1; c <= Cols; c++)
-            ws.Cell(r, c).Value = r * 1.5;
+        {
+            for (var c = 1; c <= Cols; c++)
+                ws.Cell(r, c).Value = r * 1.5;
+        }
     }
 
     private static void StyleWrapperOnly()
@@ -162,8 +176,10 @@ public static class CreatePhaseProbe
         using var wb = new XLWorkbook();
         var ws = wb.AddWorksheet("s");
         for (var r = 1; r <= Rows; r++)
-        for (var c = 1; c <= Cols; c++)
-            _ = ws.Cell(r, c).Style;
+        {
+            for (var c = 1; c <= Cols; c++)
+                _ = ws.Cell(r, c).Style;
+        }
     }
 
     private static void StyleOneMutation()
@@ -171,8 +187,10 @@ public static class CreatePhaseProbe
         using var wb = new XLWorkbook();
         var ws = wb.AddWorksheet("s");
         for (var r = 1; r <= Rows; r++)
-        for (var c = 1; c <= Cols; c++)
-            ws.Cell(r, c).Style.Font.Bold = true;
+        {
+            for (var c = 1; c <= Cols; c++)
+                ws.Cell(r, c).Style.Font.Bold = true;
+        }
     }
 
     private static void StyleFourMutations()
@@ -180,13 +198,15 @@ public static class CreatePhaseProbe
         using var wb = new XLWorkbook();
         var ws = wb.AddWorksheet("s");
         for (var r = 1; r <= Rows; r++)
-        for (var c = 1; c <= Cols; c++)
         {
-            var s = ws.Cell(r, c).Style;
-            s.Font.Bold = true;
-            s.Font.FontColor = XLColor.DarkRed;
-            s.Fill.BackgroundColor = XLColor.LightBlue;
-            s.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            for (var c = 1; c <= Cols; c++)
+            {
+                var s = ws.Cell(r, c).Style;
+                s.Font.Bold = true;
+                s.Font.FontColor = XLColor.DarkRed;
+                s.Fill.BackgroundColor = XLColor.LightBlue;
+                s.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            }
         }
     }
 
