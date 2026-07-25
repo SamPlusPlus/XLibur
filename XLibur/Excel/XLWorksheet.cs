@@ -522,30 +522,18 @@ internal sealed class XLWorksheet : XLStoredRangeBase, IXLWorksheet
         return this;
     }
 
-    public IXLWorksheet CollapseColumns()
-    {
-        Enumerable.Range(1, 8).ForEach(i => CollapseColumns(i));
-        return this;
-    }
-
-    public IXLWorksheet ExpandRows()
-    {
-        Enumerable.Range(1, 8).ForEach(i => ExpandRows(i));
-        return this;
-    }
-
-    public IXLWorksheet ExpandColumns()
-    {
-        Enumerable.Range(1, 8).ForEach(i => ExpandColumns(i));
-        return this;
-    }
-
     public IXLWorksheet CollapseRows(int outlineLevel)
     {
         if (outlineLevel is < 1 or > 8)
             throw new ArgumentOutOfRangeException(nameof(outlineLevel), "Outline level must be between 1 and 8.");
 
         Internals.RowsCollection.Values.Where(r => r.OutlineLevel == outlineLevel).ForEach(r => r.Collapse());
+        return this;
+    }
+
+    public IXLWorksheet CollapseColumns()
+    {
+        Enumerable.Range(1, 8).ForEach(i => CollapseColumns(i));
         return this;
     }
 
@@ -558,12 +546,24 @@ internal sealed class XLWorksheet : XLStoredRangeBase, IXLWorksheet
         return this;
     }
 
+    public IXLWorksheet ExpandRows()
+    {
+        Enumerable.Range(1, 8).ForEach(i => ExpandRows(i));
+        return this;
+    }
+
     public IXLWorksheet ExpandRows(int outlineLevel)
     {
         if (outlineLevel is < 1 or > 8)
             throw new ArgumentOutOfRangeException(nameof(outlineLevel), "Outline level must be between 1 and 8.");
 
         Internals.RowsCollection.Values.Where(r => r.OutlineLevel == outlineLevel).ForEach(r => r.Expand());
+        return this;
+    }
+
+    public IXLWorksheet ExpandColumns()
+    {
+        Enumerable.Range(1, 8).ForEach(i => ExpandColumns(i));
         return this;
     }
 
@@ -611,6 +611,41 @@ internal sealed class XLWorksheet : XLStoredRangeBase, IXLWorksheet
     public IXLTable Table(string name)
     {
         return Tables.Table(name);
+    }
+
+    public IXLTable Table(XLRange range, bool addToTables, bool setAutofilter = true)
+    {
+        return Table(range, TableNameGenerator.GetNewTableName(Workbook), addToTables, setAutofilter);
+    }
+
+    public IXLTable Table(XLRange range, string name, bool addToTables, bool setAutofilter = true, bool validateOverlap = true)
+    {
+        if (validateOverlap)
+            CheckRangeNotOverlappingOtherEntities(range);
+        XLRangeAddress rangeAddress;
+        if (range.Rows().Count() == 1)
+        {
+            rangeAddress = new XLRangeAddress(range.FirstCell().Address, range.LastCell().CellBelow().Address);
+            range.InsertRowsBelow(1);
+        }
+        else
+            rangeAddress = range.RangeAddress;
+
+        var rangeKey = new XLRangeKey(XLRangeType.Table, rangeAddress);
+        var table = (XLTable)_rangeRepository.GetOrCreate(ref rangeKey);
+
+        if (table.Name != name)
+            table.Name = name;
+
+        if (addToTables && !Tables.Contains(table))
+        {
+            Tables.Add(table);
+        }
+
+        if (setAutofilter && !table.ShowAutoFilter)
+            table.InitializeAutoFilter();
+
+        return table;
     }
 
     public IXLWorksheet CopyTo(string newSheetName)
@@ -1135,6 +1170,27 @@ internal sealed class XLWorksheet : XLStoredRangeBase, IXLWorksheet
         return Row(row, true);
     }
 
+    public XLRow Row(int rowNumber, bool pingCells)
+    {
+        if (rowNumber is <= 0 or > XLHelper.MaxRowNumber)
+            throw new ArgumentOutOfRangeException(nameof(rowNumber),
+                $"Row number must be between 1 and {XLHelper.MaxRowNumber}");
+
+        if (Internals.RowsCollection.TryGetValue(rowNumber, out var row))
+            return row;
+        if (pingCells)
+        {
+            // This is a new row, so we're going to reference all
+            // cells in columns of this row to preserve their formatting
+            Internals.ColumnsCollection.Keys.ForEach(c => Cell(rowNumber, c).MaterializeStyle());
+        }
+
+        row = RangeFactory.CreateRow(rowNumber);
+        Internals.RowsCollection.Add(rowNumber, row);
+
+        return row;
+    }
+
     public XLColumn Column(int columnNumber)
     {
         if (columnNumber is <= 0 or > XLHelper.MaxColumnNumber)
@@ -1241,62 +1297,6 @@ internal sealed class XLWorksheet : XLStoredRangeBase, IXLWorksheet
         {
             range.WorksheetRangeShiftedColumns(range, columnsShifted);
         }
-    }
-
-    public XLRow Row(int rowNumber, bool pingCells)
-    {
-        if (rowNumber is <= 0 or > XLHelper.MaxRowNumber)
-            throw new ArgumentOutOfRangeException(nameof(rowNumber),
-                $"Row number must be between 1 and {XLHelper.MaxRowNumber}");
-
-        if (Internals.RowsCollection.TryGetValue(rowNumber, out var row))
-            return row;
-        if (pingCells)
-        {
-            // This is a new row, so we're going to reference all
-            // cells in columns of this row to preserve their formatting
-            Internals.ColumnsCollection.Keys.ForEach(c => Cell(rowNumber, c).MaterializeStyle());
-        }
-
-        row = RangeFactory.CreateRow(rowNumber);
-        Internals.RowsCollection.Add(rowNumber, row);
-
-        return row;
-    }
-
-    public IXLTable Table(XLRange range, bool addToTables, bool setAutofilter = true)
-    {
-        return Table(range, TableNameGenerator.GetNewTableName(Workbook), addToTables, setAutofilter);
-    }
-
-    public IXLTable Table(XLRange range, string name, bool addToTables, bool setAutofilter = true, bool validateOverlap = true)
-    {
-        if (validateOverlap)
-            CheckRangeNotOverlappingOtherEntities(range);
-        XLRangeAddress rangeAddress;
-        if (range.Rows().Count() == 1)
-        {
-            rangeAddress = new XLRangeAddress(range.FirstCell().Address, range.LastCell().CellBelow().Address);
-            range.InsertRowsBelow(1);
-        }
-        else
-            rangeAddress = range.RangeAddress;
-
-        var rangeKey = new XLRangeKey(XLRangeType.Table, rangeAddress);
-        var table = (XLTable)_rangeRepository.GetOrCreate(ref rangeKey);
-
-        if (table.Name != name)
-            table.Name = name;
-
-        if (addToTables && !Tables.Contains(table))
-        {
-            Tables.Add(table);
-        }
-
-        if (setAutofilter && !table.ShowAutoFilter)
-            table.InitializeAutoFilter();
-
-        return table;
     }
 
     private void CheckRangeNotOverlappingOtherEntities(XLRange range)
@@ -1420,15 +1420,15 @@ internal sealed class XLWorksheet : XLStoredRangeBase, IXLWorksheet
 
     public IXLWorksheet FocusCell(string address) => FocusCell(ResolveCell(address));
 
-    private XLCell ResolveCell(string address) =>
-        Cell(address) ?? throw new ArgumentException($"'{address}' is not a valid cell address.", nameof(address));
-
     public IXLWorksheet FocusCell(IXLCell cell)
     {
         SetActiveCell(cell);
         ScrollIntoView(cell.Address);
         return this;
     }
+
+    private XLCell ResolveCell(string address) =>
+        Cell(address) ?? throw new ArgumentException($"'{address}' is not a valid cell address.", nameof(address));
 
     // Anchors the scroll so <paramref name="target"/> is at the top-left of the scrollable region.
     // No frozen pane  -> set the view's top-left to the target.
