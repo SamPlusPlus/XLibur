@@ -188,6 +188,26 @@ internal sealed class CalcContext
     }
 
     /// <summary>
+    /// This method should be used mostly for range arguments. If a value is scalar,
+    /// return a single value enumerable.
+    /// </summary>
+    internal IEnumerable<ScalarValue> GetNonBlankValues(AnyValue value)
+    {
+        if (value.TryPickScalar(out var scalar, out var collection))
+        {
+            if (scalar.IsBlank)
+                return [];
+
+            return new ScalarArray(scalar, 1, 1);
+        }
+
+        if (collection.TryPickT0(out var array, out var reference))
+            return array.Where(x => !x.IsBlank);
+
+        return GetNonBlankValues(reference);
+    }
+
+    /// <summary>
     /// Return all points in the <paramref name="areaReference" /> that satisfy the <paramref name="criteria" />.
     /// </summary>
     internal IEnumerable<XLSheetPoint> GetCriteriaPoints(XLRangeAddress areaReference, Criteria criteria)
@@ -290,26 +310,6 @@ internal sealed class CalcContext
 
             return _isHidden;
         }
-    }
-
-    /// <summary>
-    /// This method should be used mostly for range arguments. If a value is scalar,
-    /// return a single value enumerable.
-    /// </summary>
-    internal IEnumerable<ScalarValue> GetNonBlankValues(AnyValue value)
-    {
-        if (value.TryPickScalar(out var scalar, out var collection))
-        {
-            if (scalar.IsBlank)
-                return [];
-
-            return new ScalarArray(scalar, 1, 1);
-        }
-
-        if (collection.TryPickT0(out var array, out var reference))
-            return array.Where(x => !x.IsBlank);
-
-        return GetNonBlankValues(reference);
     }
 
     internal IEnumerable<ScalarValue> GetAllValues(AnyValue value)
