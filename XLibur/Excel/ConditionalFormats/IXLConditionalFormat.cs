@@ -104,33 +104,33 @@ public interface IXLConditionalFormat
 
     IXLStyle WhenEquals(string value);
 
-    IXLStyle WhenNotEquals(string value);
-
-    IXLStyle WhenGreaterThan(string value);
-
-    IXLStyle WhenLessThan(string value);
-
-    IXLStyle WhenEqualOrGreaterThan(string value);
-
-    IXLStyle WhenEqualOrLessThan(string value);
-
-    IXLStyle WhenBetween(string minValue, string maxValue);
-
-    IXLStyle WhenNotBetween(string minValue, string maxValue);
-
     IXLStyle WhenEquals(double value);
+
+    IXLStyle WhenNotEquals(string value);
 
     IXLStyle WhenNotEquals(double value);
 
+    IXLStyle WhenGreaterThan(string value);
+
     IXLStyle WhenGreaterThan(double value);
+
+    IXLStyle WhenLessThan(string value);
 
     IXLStyle WhenLessThan(double value);
 
+    IXLStyle WhenEqualOrGreaterThan(string value);
+
     IXLStyle WhenEqualOrGreaterThan(double value);
+
+    IXLStyle WhenEqualOrLessThan(string value);
 
     IXLStyle WhenEqualOrLessThan(double value);
 
+    IXLStyle WhenBetween(string minValue, string maxValue);
+
     IXLStyle WhenBetween(double minValue, double maxValue);
+
+    IXLStyle WhenNotBetween(string minValue, string maxValue);
 
     IXLStyle WhenNotBetween(double minValue, double maxValue);
 
