@@ -129,6 +129,13 @@ internal sealed class XLPivotTableAxis : IXLPivotFields
         _fields.Add(fieldIndex);
     }
 
+    internal XLPivotTableAxisField AddField(string sourceName, string customName)
+    {
+        var index = _pivotTable.AddFieldToAxis(sourceName, customName, _axis);
+        _fields.Add(index);
+        return new XLPivotTableAxisField(_pivotTable, index);
+    }
+
     private XLPivotTableAxisField Add(string sourceName, string customName)
     {
         var field = AddField(sourceName, customName);
@@ -138,13 +145,6 @@ internal sealed class XLPivotTableAxis : IXLPivotFields
             _pivotTable.PivotFields[field.Offset].AddSubtotal(XLSubtotalFunction.Automatic);
 
         return field;
-    }
-
-    internal XLPivotTableAxisField AddField(string sourceName, string customName)
-    {
-        var index = _pivotTable.AddFieldToAxis(sourceName, customName, _axis);
-        _fields.Add(index);
-        return new XLPivotTableAxisField(_pivotTable, index);
     }
 
     /// <summary>
