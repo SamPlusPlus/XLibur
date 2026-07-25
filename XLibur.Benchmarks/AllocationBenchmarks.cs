@@ -90,7 +90,7 @@ public class AllocationBenchmarks
 
     // #5 ColorExtensions.ToHex
     [Benchmark]
-    public int ToHex()
+    public static int ToHex()
     {
         var sum = 0;
         for (var i = 0; i < Iterations; i++)
@@ -100,7 +100,7 @@ public class AllocationBenchmarks
 
     // #6 XLAddress.ToString
     [Benchmark]
-    public int AddressToString()
+    public static int AddressToString()
     {
         var sum = 0;
         for (var i = 0; i < Iterations; i++)
@@ -110,7 +110,7 @@ public class AllocationBenchmarks
 
     // #7 XLAddress.Create
     [Benchmark]
-    public int AddressCreate()
+    public static int AddressCreate()
     {
         var sum = 0;
         for (var i = 0; i < Iterations; i++)
@@ -120,7 +120,7 @@ public class AllocationBenchmarks
 
     // #1 FormatExtensions.ToExcelFormat
     [Benchmark]
-    public int ToExcelFormat()
+    public static int ToExcelFormat()
     {
         var sum = 0;
         for (var i = 0; i < Iterations; i++)
@@ -130,7 +130,7 @@ public class AllocationBenchmarks
 
     // #10 StringExtensions.EscapeSheetName
     [Benchmark]
-    public int EscapeSheetName()
+    public static int EscapeSheetName()
     {
         var sum = 0;
         for (var i = 0; i < Iterations; i++)
@@ -140,7 +140,7 @@ public class AllocationBenchmarks
 
     // #9 StringExtensions.FixNewLines
     [Benchmark]
-    public int FixNewLines()
+    public static int FixNewLines()
     {
         var sum = 0;
         for (var i = 0; i < Iterations; i++)
@@ -150,7 +150,7 @@ public class AllocationBenchmarks
 
     // #8 StringExtensions.CharCount
     [Benchmark]
-    public int CharCount()
+    public static int CharCount()
     {
         var sum = 0;
         for (var i = 0; i < Iterations; i++)
