@@ -18,18 +18,6 @@ internal static class SignatureAdapter
         return (_, _) => f().ToAnyValue();
     }
 
-    public static CalcEngineFunction AdaptCoerced(Func<bool, AnyValue> f)
-    {
-        return (ctx, args) =>
-        {
-            var arg0Converted = CoerceToLogical(args[0], ctx);
-            if (!arg0Converted.TryPickT0(out var arg0, out var err0))
-                return err0;
-
-            return f(arg0);
-        };
-    }
-
     public static CalcEngineFunction Adapt(Func<double, ScalarValue> f)
     {
         return (ctx, args) =>
@@ -389,6 +377,55 @@ internal static class SignatureAdapter
         };
     }
 
+    public static CalcEngineFunction Adapt(Func<CalcContext, double, AnyValue[], AnyValue> f)
+    {
+        return (ctx, args) =>
+        {
+            var arg0Converted = ToNumber(args[0], ctx);
+            if (!arg0Converted.TryPickT0(out var arg0, out var err0))
+                return err0;
+
+            var argsLoop = args[1..].ToArray();
+            return f(ctx, arg0, argsLoop);
+        };
+    }
+
+    /// <summary>
+    /// Adapt a function that accepts areas as arguments (e.g. SUMPRODUCT). The key benefit is
+    /// that all <c>ReferenceArray</c> allocation is done once for a function. The method
+    /// shouldn't be used for functions that accept 3D references (e.g. SUMSQ). It is still
+    /// necessary to check all errors in the <paramref name="f"/>, adapt method doesn't do that
+    /// on its own (potential performance problem). The signature uses an array instead of
+    /// IReadOnlyList interface for performance reasons (can't JIT access props through interface).
+    /// </summary>
+    public static CalcEngineFunction Adapt(Func<CalcContext, Array[], AnyValue> f)
+    {
+        return (ctx, args) =>
+        {
+            var areas = new Array[args.Length];
+            for (var i = 0; i < args.Length; ++i)
+            {
+                areas[i] = args[i].TryPickSingleOrMultiValue(out var scalar, out var array, ctx)
+                    ? new ScalarArray(scalar, 1, 1)
+                    : array!;
+            }
+
+            return f(ctx, areas);
+        };
+    }
+
+    public static CalcEngineFunction AdaptCoerced(Func<bool, AnyValue> f)
+    {
+        return (ctx, args) =>
+        {
+            var arg0Converted = CoerceToLogical(args[0], ctx);
+            if (!arg0Converted.TryPickT0(out var arg0, out var err0))
+                return err0;
+
+            return f(arg0);
+        };
+    }
+
     public static CalcEngineFunction AdaptLastOptional(Func<ScalarValue, AnyValue, AnyValue, AnyValue> f, AnyValue lastDefault)
     {
         return (ctx, args) =>
@@ -497,19 +534,6 @@ internal static class SignatureAdapter
         };
     }
 
-    public static CalcEngineFunction Adapt(Func<CalcContext, double, AnyValue[], AnyValue> f)
-    {
-        return (ctx, args) =>
-        {
-            var arg0Converted = ToNumber(args[0], ctx);
-            if (!arg0Converted.TryPickT0(out var arg0, out var err0))
-                return err0;
-
-            var argsLoop = args[1..].ToArray();
-            return f(ctx, arg0, argsLoop);
-        };
-    }
-
     public static CalcEngineFunction AdaptLastOptional(Func<CalcContext, string, string, OneOf<double, Blank>, AnyValue> f)
     {
         return (ctx, args) =>
@@ -583,6 +607,28 @@ internal static class SignatureAdapter
             var arg2 = args.Length > 2 ? args[2] : AnyValue.Blank;
 
             return f(ctx, arg0, arg1, arg2);
+        };
+    }
+
+    public static CalcEngineFunction AdaptLastOptional(Func<CalcContext, ScalarValue, AnyValue, double, bool, AnyValue> f, bool defaultValue0)
+    {
+        return (ctx, args) =>
+        {
+            var arg0Converted = ToScalarValue(args[0], ctx);
+            if (!arg0Converted.TryPickT0(out var arg0, out var err0))
+                return err0;
+
+            var arg1 = args[1];
+
+            var arg2Converted = ToNumber(args[2], ctx);
+            if (!arg2Converted.TryPickT0(out var arg2, out var err2))
+                return err2;
+
+            var arg3Converted = args.Length >= 4 ? CoerceToLogical(args[3], ctx) : defaultValue0;
+            if (!arg3Converted.TryPickT0(out var arg3, out var err3))
+                return err3;
+
+            return f(ctx, arg0, arg1, arg2, arg3);
         };
     }
 
@@ -734,52 +780,6 @@ internal static class SignatureAdapter
                 scalarCollections.Add(GetNonBlankScalars(arg, ctx));
 
             return f(ctx, scalarCollections).ToAnyValue();
-        };
-    }
-
-    /// <summary>
-    /// Adapt a function that accepts areas as arguments (e.g. SUMPRODUCT). The key benefit is
-    /// that all <c>ReferenceArray</c> allocation is done once for a function. The method
-    /// shouldn't be used for functions that accept 3D references (e.g. SUMSQ). It is still
-    /// necessary to check all errors in the <paramref name="f"/>, adapt method doesn't do that
-    /// on its own (potential performance problem). The signature uses an array instead of
-    /// IReadOnlyList interface for performance reasons (can't JIT access props through interface).
-    /// </summary>
-    public static CalcEngineFunction Adapt(Func<CalcContext, Array[], AnyValue> f)
-    {
-        return (ctx, args) =>
-        {
-            var areas = new Array[args.Length];
-            for (var i = 0; i < args.Length; ++i)
-            {
-                areas[i] = args[i].TryPickSingleOrMultiValue(out var scalar, out var array, ctx)
-                    ? new ScalarArray(scalar, 1, 1)
-                    : array!;
-            }
-
-            return f(ctx, areas);
-        };
-    }
-
-    public static CalcEngineFunction AdaptLastOptional(Func<CalcContext, ScalarValue, AnyValue, double, bool, AnyValue> f, bool defaultValue0)
-    {
-        return (ctx, args) =>
-        {
-            var arg0Converted = ToScalarValue(args[0], ctx);
-            if (!arg0Converted.TryPickT0(out var arg0, out var err0))
-                return err0;
-
-            var arg1 = args[1];
-
-            var arg2Converted = ToNumber(args[2], ctx);
-            if (!arg2Converted.TryPickT0(out var arg2, out var err2))
-                return err2;
-
-            var arg3Converted = args.Length >= 4 ? CoerceToLogical(args[3], ctx) : defaultValue0;
-            if (!arg3Converted.TryPickT0(out var arg3, out var err3))
-                return err3;
-
-            return f(ctx, arg0, arg1, arg2, arg3);
         };
     }
 
