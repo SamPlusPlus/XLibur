@@ -724,6 +724,18 @@ internal static class DateAndTime
         return true;
     }
 
+    private static bool TryGetDate(CalcContext ctx, double serialDateTime, out int serialDate)
+    {
+        if (serialDateTime < 0 || serialDateTime >= ctx.DateSystemUpperLimit)
+        {
+            serialDate = default;
+            return false;
+        }
+
+        serialDate = checked((int)Math.Truncate(serialDateTime));
+        return true;
+    }
+
     private static bool TryGetMonthsOffset(double monthsOffset, out int months)
     {
         // Limit enough so integer math won't overflow when added to a date
@@ -734,18 +746,6 @@ internal static class DateAndTime
         }
 
         months = checked((int)monthsOffset);
-        return true;
-    }
-
-    private static bool TryGetDate(CalcContext ctx, double serialDateTime, out int serialDate)
-    {
-        if (serialDateTime < 0 || serialDateTime >= ctx.DateSystemUpperLimit)
-        {
-            serialDate = default;
-            return false;
-        }
-
-        serialDate = checked((int)Math.Truncate(serialDateTime));
         return true;
     }
 
