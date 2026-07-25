@@ -210,11 +210,6 @@ public interface IXLRange : IXLRangeBase
     /// <param name="lastCellAddress"> The last cell address in the range.</param>
     IXLRange Range(IXLAddress firstCellAddress, IXLAddress lastCellAddress);
 
-    /// <summary>Returns a collection of ranges, separated by commas.</summary>
-    /// <para>e.g. Ranges("A1"), Ranges("A1:C2"), Ranges("A1:B2,D1:D4")</para>
-    /// <param name="ranges">The ranges to return.</param>
-    IXLRanges Ranges(string ranges);
-
     /// <summary>Returns the specified range.</summary>
     /// <param name="firstCellRow">   The first cell's row of the range to return.</param>
     /// <param name="firstCellColumn">The first cell's column of the range to return.</param>
@@ -222,6 +217,11 @@ public interface IXLRange : IXLRangeBase
     /// <param name="lastCellColumn"> The last cell's column of the range to return.</param>
     /// <returns>.</returns>
     IXLRange Range(int firstCellRow, int firstCellColumn, int lastCellRow, int lastCellColumn);
+
+    /// <summary>Returns a collection of ranges, separated by commas.</summary>
+    /// <para>e.g. Ranges("A1"), Ranges("A1:C2"), Ranges("A1:B2,D1:D4")</para>
+    /// <param name="ranges">The ranges to return.</param>
+    IXLRanges Ranges(string ranges);
 
     /// <summary>Gets the number of rows in this range.</summary>
     int RowCount();
