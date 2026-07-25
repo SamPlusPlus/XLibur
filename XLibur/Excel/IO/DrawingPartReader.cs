@@ -67,7 +67,7 @@ internal static class DrawingPartReader
                 var group = anchor.Elements<Xdr.GroupShape>().FirstOrDefault();
                 if (group != null)
                 {
-                    LoadGroupedPictures(anchor, group, drawingsPart, ws);
+                    LoadGroupedPictures(group, drawingsPart, ws);
                     continue;
                 }
 
@@ -98,8 +98,7 @@ internal static class DrawingPartReader
     /// transform) and tagged with its <see cref="XLPictureGroup"/> so the writer can update it in
     /// place. Non-picture children (connectors, shapes) are left untouched and preserved verbatim.
     /// </summary>
-    private static void LoadGroupedPictures(OpenXmlElement anchor, Xdr.GroupShape group,
-        DrawingsPart drawingsPart, XLWorksheet ws)
+    private static void LoadGroupedPictures(Xdr.GroupShape group, DrawingsPart drawingsPart, XLWorksheet ws)
     {
         // The parent coordinate space of the top-level group is the sheet itself: identity transform.
         LoadGroupRecursive(group, drawingsPart, ws, parentScaleX: 1.0, parentScaleY: 1.0,
