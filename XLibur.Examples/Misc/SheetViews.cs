@@ -36,8 +36,8 @@ public class SheetViews : IXLExample
         ws.SheetView.TopLeftCellAddress = ws.Cell("AZ2000").Address;
 
         // FocusCell sets the active cell AND scrolls the sheet so it is visible at the
-        // top-left of the scrollable region. On a frozen sheet it drives <pane topLeftCell>;
-        // on an unfrozen sheet it drives <sheetView topLeftCell>.
+        // top-left of the scrollable region. On a frozen sheet it drives <pane topLeftCell>.
+        // On an unfrozen sheet it drives <sheetView topLeftCell>.
         ws = wb.AddWorksheet("FocusCell");
         ws.SheetView.FreezeRows(2);
         ws.Cell("A1").SetValue("Frozen header");

@@ -179,8 +179,8 @@ internal sealed class XLWorksheetRangeShifter(XLWorksheet worksheet)
         var first = range.RangeAddress.FirstAddress;
         var last = range.RangeAddress.LastAddress;
         // The area model handles every insert, including a first-column insert. (The old range-based
-        // path short-circuited here and let the blanket range shifter move the validation ranges;
-        // area-based coverage is no longer a repository range, so it must be shifted here.)
+        // path short-circuited here and let the blanket range shifter move the validation ranges.
+        // Area-based coverage is no longer a repository range, so it must be shifted here.)
         var affected = columnsShifted > 0
             ? new XLSheetRange(first.RowNumber, first.ColumnNumber, last.RowNumber, first.ColumnNumber + columnsShifted - 1)
             : new XLSheetRange(first.RowNumber, first.ColumnNumber, last.RowNumber, first.ColumnNumber - columnsShifted - 1);
@@ -195,8 +195,8 @@ internal sealed class XLWorksheetRangeShifter(XLWorksheet worksheet)
         var first = range.RangeAddress.FirstAddress;
         var last = range.RangeAddress.LastAddress;
         // The area model handles every insert, including a first-row insert. (The old range-based
-        // path short-circuited here and let the blanket range shifter move the validation ranges;
-        // area-based coverage is no longer a repository range, so it must be shifted here.)
+        // path short-circuited here and let the blanket range shifter move the validation ranges.
+        // Area-based coverage is no longer a repository range, so it must be shifted here.)
         var affected = rowsShifted > 0
             ? new XLSheetRange(first.RowNumber, first.ColumnNumber, first.RowNumber + rowsShifted - 1, last.ColumnNumber)
             : new XLSheetRange(first.RowNumber, first.ColumnNumber, first.RowNumber - rowsShifted - 1, last.ColumnNumber);

@@ -45,8 +45,8 @@ internal sealed class BmpInfoReader : ImageInfoReader
 
     protected override XLPictureInfo ReadInfo(Stream stream)
     {
-        // OS/2 "BA" files prepend a BITMAPARRAYHEADER before the first BITMAPFILEHEADER;
-        // plain "BM" files start with the BITMAPFILEHEADER directly.
+        // OS/2 "BA" files prepend a BITMAPARRAYHEADER before the first BITMAPFILEHEADER.
+        // Plain "BM" files start with the BITMAPFILEHEADER directly.
         Span<byte> signature = stackalloc byte[2];
         stream.ReadExactly(signature);
         var fileHeaderStart = signature[1] == 'A' ? BitmapArrayHeaderSize : 0;
