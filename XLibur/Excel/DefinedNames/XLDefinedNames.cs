@@ -90,6 +90,26 @@ internal sealed class XLDefinedNames : IXLDefinedNames, IEnumerable<XLDefinedNam
         return namedRange;
     }
 
+    public IXLDefinedName Add(string name, IXLRange range, string? comment)
+    {
+        var ranges = new XLRanges { range };
+        return Add(name, ranges, comment);
+    }
+
+    public IXLDefinedName Add(string name, IXLRanges ranges, string? comment)
+    {
+        var formula = string.Join(",", ranges.Select(r => r.RangeAddress.ToStringFixed(XLReferenceStyle.A1, true)));
+        var namedRange = new XLDefinedName(this, name, true, formula, comment);
+        _namedRanges.Add(name, namedRange);
+        return namedRange;
+    }
+
+    internal XLDefinedName Add(string name, XLDefinedName namedRange)
+    {
+        _namedRanges.Add(name, namedRange);
+        return namedRange;
+    }
+
     private string ValidateAndResolveAddress(string name, string rangeAddress)
     {
         var match = XLHelper.NamedRangeReferenceRegex.Match(rangeAddress);
@@ -122,26 +142,6 @@ internal sealed class XLDefinedNames : IXLDefinedNames, IEnumerable<XLDefinedNam
             return Workbook.Range(rangeAddress);
 
         throw new NotSupportedException($"Scope {Scope} is not supported");
-    }
-
-    public IXLDefinedName Add(string name, IXLRange range, string? comment)
-    {
-        var ranges = new XLRanges { range };
-        return Add(name, ranges, comment);
-    }
-
-    public IXLDefinedName Add(string name, IXLRanges ranges, string? comment)
-    {
-        var formula = string.Join(",", ranges.Select(r => r.RangeAddress.ToStringFixed(XLReferenceStyle.A1, true)));
-        var namedRange = new XLDefinedName(this, name, true, formula, comment);
-        _namedRanges.Add(name, namedRange);
-        return namedRange;
-    }
-
-    internal XLDefinedName Add(string name, XLDefinedName namedRange)
-    {
-        _namedRanges.Add(name, namedRange);
-        return namedRange;
     }
 
     public void Delete(string name)
