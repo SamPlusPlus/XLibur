@@ -28,6 +28,20 @@ internal sealed class FunctionRegistry
         return _func.TryGetValue(name, out func);
     }
 
+    public bool TryGetFunc(string name, out int paramMin, out int paramMax)
+    {
+        if (_func.TryGetValue(name, out var func))
+        {
+            paramMin = func.MinParams;
+            paramMax = func.MaxParams;
+            return true;
+        }
+
+        paramMin = -1;
+        paramMax = -1;
+        return false;
+    }
+
     /// <summary>
     /// Add a function to the registry.
     /// </summary>
@@ -42,19 +56,5 @@ internal sealed class FunctionRegistry
         FunctionFlags flags, AllowRange allowRanges = AllowRange.None, params int[] markedParams)
     {
         _func.Add(functionName, new FunctionDefinition(minParams, maxParams, fn, flags, allowRanges, markedParams));
-    }
-
-    public bool TryGetFunc(string name, out int paramMin, out int paramMax)
-    {
-        if (_func.TryGetValue(name, out var func))
-        {
-            paramMin = func.MinParams;
-            paramMax = func.MaxParams;
-            return true;
-        }
-
-        paramMin = -1;
-        paramMax = -1;
-        return false;
     }
 }
