@@ -1,8 +1,19 @@
 name: Release
 
+# All packages version in lockstep from the `v*` tag, so one tag releases the
+# whole set: XLibur, XLibur.Bundle, and the three font engine packages.
 on:
   push:
-    tags: ['v*', 'fonts-sixlabors-1-v*', 'fonts-sixlabors-v*', 'fonts-skiasharp-v*']
+    tags: ['v*']
+  # Called by release-publish.yml, which creates the tag and then invokes this
+  # workflow directly. A tag pushed with GITHUB_TOKEN does not trigger the
+  # `push: tags` trigger above, so the call has to be explicit.
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Tag to release'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -12,11 +23,26 @@ jobs:
   release:
     runs-on: ubuntu-latest
 
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ inputs.tag || github.ref }}
           fetch-depth: 0
           fetch-tags: true
+
+      # Captured before publishing, because once this release is published it
+      # becomes "latest" and can no longer serve as the previous tag.
+      - name: Resolve previous release tag
+        id: previous
+        run: |
+          prev=$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --exclude-pre-releases \
+                   --limit 1 --json tagName --jq '.[0].tagName // ""')
+          echo "tag=$prev" >> "$GITHUB_OUTPUT"
+          echo "Previous release tag: ${prev:-<none>}"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
@@ -31,20 +57,34 @@ jobs:
       - name: Build
         run: dotnet build XLibur.slnx --configuration Release --no-restore
 
-      - name: Pack XLibur
-        run: dotnet pack XLibur/XLibur.csproj --configuration Release --no-build --output ./artifacts
+      - name: Pack
+        run: |
+          for project in XLibur XLibur.Fonts.SixLabors.V1 XLibur.Bundle XLibur.Fonts.SixLabors XLibur.Fonts.SkiaSharp; do
+            echo "::group::Pack $project"
+            dotnet pack "$project/$project.csproj" --configuration Release --no-build --output ./artifacts
+            echo "::endgroup::"
+          done
+          ls -la ./artifacts/
 
-      - name: Pack XLibur.Fonts.SixLabors.V1
-        run: dotnet pack XLibur.Fonts.SixLabors.V1/XLibur.Fonts.SixLabors.V1.csproj --configuration Release --no-build --output ./artifacts
-
-      - name: Pack XLibur.Bundle
-        run: dotnet pack XLibur.Bundle/XLibur.Bundle.csproj --configuration Release --no-build --output ./artifacts
-
-      - name: Pack XLibur.Fonts.SixLabors
-        run: dotnet pack XLibur.Fonts.SixLabors/XLibur.Fonts.SixLabors.csproj --configuration Release --no-build --output ./artifacts
-
-      - name: Pack XLibur.Fonts.SkiaSharp
-        run: dotnet pack XLibur.Fonts.SkiaSharp/XLibur.Fonts.SkiaSharp.csproj --configuration Release --no-build --output ./artifacts
+      # Every package must carry the tag's version. A mismatch means MinVer did
+      # not see the tag, which would publish a prerelease-versioned package and
+      # leave XLibur.Bundle depending on a version that was never released.
+      - name: Verify package versions match the tag
+        run: |
+          expected=${TAG#v}
+          status=0
+          for package in ./artifacts/*.nupkg; do
+            name=$(basename "$package" .nupkg)
+            if [ "${name%.$expected}" = "$name" ]; then
+              echo "::error::$name is not version $expected"
+              status=1
+            fi
+          done
+          if [ "$status" -ne 0 ]; then
+            echo "::error::Package versions do not match tag $TAG — refusing to publish"
+            exit 1
+          fi
+          echo "All packages are version $expected"
 
       - name: NuGet login
         uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
@@ -58,17 +98,48 @@ jobs:
       - name: Push symbols to NuGet
         run: dotnet nuget push ./artifacts/*.snupkg --source https://api.nuget.org/v3/index.json --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --skip-duplicate
 
+      # Publishes the rolling draft that Release Drafter has been accumulating
+      # from merged PRs, so any manual edits made to it are kept.
       - name: Publish GitHub Release
         uses: release-drafter/release-drafter@v7
         with:
           publish: true
-          tag: ${{ github.ref_name }}
+          tag: ${{ env.TAG }}
+          name: ${{ env.TAG }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Release Drafter has no first-time-contributor detection, so borrow
+      # GitHub's own and append its "New Contributors" section to the notes.
+      - name: Append new contributors
+        run: |
+          prev='${{ steps.previous.outputs.tag }}'
+          if [ -n "$prev" ]; then
+            generated=$(gh api --method POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+              -f tag_name="$TAG" -f previous_tag_name="$prev" --jq .body)
+          else
+            generated=$(gh api --method POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+              -f tag_name="$TAG" --jq .body)
+          fi
+
+          printf '%s\n' "$generated" | awk '/^## New Contributors/ { found = 1 } found { print }' > new-contributors.md
+
+          if [ ! -s new-contributors.md ]; then
+            echo "No new contributors in this release."
+            exit 0
+          fi
+
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body > notes.md
+          printf '\n' >> notes.md
+          cat new-contributors.md >> notes.md
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --notes-file notes.md
+          echo "Appended:"
+          cat new-contributors.md
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v3
         with:
+          tag_name: ${{ env.TAG }}
           files: |
             ./artifacts/*.nupkg
             ./artifacts/*.snupkg
