@@ -258,14 +258,14 @@ internal class XLRange : XLStoredRangeBase, IXLRange
         return CreateTable();
     }
 
-    public XLTable CreateTable()
-    {
-        return (XLTable)Worksheet.Table(this, true);
-    }
-
     IXLTable IXLRange.CreateTable(string name)
     {
         return CreateTable(name);
+    }
+
+    public XLTable CreateTable()
+    {
+        return (XLTable)Worksheet.Table(this, true);
     }
 
     public XLTable CreateTable(string name)
@@ -392,14 +392,14 @@ internal class XLRange : XLStoredRangeBase, IXLRange
         return FirstColumnUsed(XLCellsUsedOptions.AllContents, predicate);
     }
 
-    internal XLRangeColumn? FirstColumnUsed(Func<IXLRangeColumn, bool>? predicate = null)
-    {
-        return FirstColumnUsed(XLCellsUsedOptions.AllContents, predicate);
-    }
-
     IXLRangeColumn? IXLRange.FirstColumnUsed(XLCellsUsedOptions options, Func<IXLRangeColumn, bool>? predicate)
     {
         return FirstColumnUsed(options, predicate);
+    }
+
+    internal XLRangeColumn? FirstColumnUsed(Func<IXLRangeColumn, bool>? predicate = null)
+    {
+        return FirstColumnUsed(XLCellsUsedOptions.AllContents, predicate);
     }
 
     internal XLRangeColumn? FirstColumnUsed(XLCellsUsedOptions options, Func<IXLRangeColumn, bool>? predicate = null)
@@ -430,14 +430,14 @@ internal class XLRange : XLStoredRangeBase, IXLRange
         return LastColumnUsed(XLCellsUsedOptions.AllContents, predicate);
     }
 
-    internal XLRangeColumn? LastColumnUsed(Func<IXLRangeColumn, bool>? predicate = null)
-    {
-        return LastColumnUsed(XLCellsUsedOptions.AllContents, predicate);
-    }
-
     IXLRangeColumn? IXLRange.LastColumnUsed(XLCellsUsedOptions options, Func<IXLRangeColumn, bool>? predicate)
     {
         return LastColumnUsed(options, predicate);
+    }
+
+    internal XLRangeColumn? LastColumnUsed(Func<IXLRangeColumn, bool>? predicate = null)
+    {
+        return LastColumnUsed(XLCellsUsedOptions.AllContents, predicate);
     }
 
     internal XLRangeColumn? LastColumnUsed(XLCellsUsedOptions options, Func<IXLRangeColumn, bool>? predicate = null)
@@ -508,14 +508,14 @@ internal class XLRange : XLStoredRangeBase, IXLRange
         return FirstRowUsed(XLCellsUsedOptions.AllContents, predicate);
     }
 
-    internal XLRangeRow? FirstRowUsed(Func<IXLRangeRow, bool>? predicate = null)
-    {
-        return FirstRowUsed(XLCellsUsedOptions.AllContents, predicate);
-    }
-
     IXLRangeRow? IXLRange.FirstRowUsed(XLCellsUsedOptions options, Func<IXLRangeRow, bool>? predicate)
     {
         return FirstRowUsed(options, predicate);
+    }
+
+    internal XLRangeRow? FirstRowUsed(Func<IXLRangeRow, bool>? predicate = null)
+    {
+        return FirstRowUsed(XLCellsUsedOptions.AllContents, predicate);
     }
 
     internal XLRangeRow? FirstRowUsed(XLCellsUsedOptions options, Func<IXLRangeRow, bool>? predicate = null)
@@ -545,14 +545,14 @@ internal class XLRange : XLStoredRangeBase, IXLRange
         return LastRowUsed(XLCellsUsedOptions.AllContents, predicate);
     }
 
-    internal XLRangeRow? LastRowUsed(Func<IXLRangeRow, bool>? predicate = null)
-    {
-        return LastRowUsed(XLCellsUsedOptions.AllContents, predicate);
-    }
-
     IXLRangeRow? IXLRange.LastRowUsed(XLCellsUsedOptions options, Func<IXLRangeRow, bool>? predicate)
     {
         return LastRowUsed(options, predicate);
+    }
+
+    internal XLRangeRow? LastRowUsed(Func<IXLRangeRow, bool>? predicate = null)
+    {
+        return LastRowUsed(XLCellsUsedOptions.AllContents, predicate);
     }
 
     internal XLRangeRow? LastRowUsed(XLCellsUsedOptions options, Func<IXLRangeRow, bool>? predicate = null)
@@ -582,6 +582,11 @@ internal class XLRange : XLStoredRangeBase, IXLRange
         return RowsUsed(options, predicate);
     }
 
+    IXLRangeRows IXLRange.RowsUsed(Func<IXLRangeRow, bool>? predicate)
+    {
+        return RowsUsed(predicate);
+    }
+
     internal XLRangeRows RowsUsed(XLCellsUsedOptions options, Func<IXLRangeRow, bool>? predicate = null)
     {
         var rows = new XLRangeRows();
@@ -598,11 +603,6 @@ internal class XLRange : XLStoredRangeBase, IXLRange
         return rows;
     }
 
-    IXLRangeRows IXLRange.RowsUsed(Func<IXLRangeRow, bool>? predicate)
-    {
-        return RowsUsed(predicate);
-    }
-
     internal XLRangeRows RowsUsed(Func<IXLRangeRow, bool>? predicate = null)
     {
         return RowsUsed(XLCellsUsedOptions.AllContents, predicate);
@@ -611,6 +611,11 @@ internal class XLRange : XLStoredRangeBase, IXLRange
     IXLRangeColumns IXLRange.ColumnsUsed(XLCellsUsedOptions options, Func<IXLRangeColumn, bool>? predicate)
     {
         return ColumnsUsed(options, predicate);
+    }
+
+    IXLRangeColumns IXLRange.ColumnsUsed(Func<IXLRangeColumn, bool>? predicate)
+    {
+        return ColumnsUsed(predicate);
     }
 
     internal virtual XLRangeColumns ColumnsUsed(XLCellsUsedOptions options, Func<IXLRangeColumn, bool>? predicate = null)
@@ -627,11 +632,6 @@ internal class XLRange : XLStoredRangeBase, IXLRange
         }
 
         return columns;
-    }
-
-    IXLRangeColumns IXLRange.ColumnsUsed(Func<IXLRangeColumn, bool>? predicate)
-    {
-        return ColumnsUsed(predicate);
     }
 
     internal virtual XLRangeColumns ColumnsUsed(Func<IXLRangeColumn, bool>? predicate = null)
