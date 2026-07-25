@@ -143,11 +143,6 @@ internal sealed class XLColumns : XLStylizedBase, IXLColumns, IXLStylized
         Group(outlineLevel, false);
     }
 
-    public void Ungroup()
-    {
-        Ungroup(false);
-    }
-
     public void Group(bool collapse)
     {
         Columns.ForEach(c => c.Group(collapse));
@@ -156,6 +151,11 @@ internal sealed class XLColumns : XLStylizedBase, IXLColumns, IXLStylized
     public void Group(int outlineLevel, bool collapse)
     {
         Columns.ForEach(c => c.Group(outlineLevel, collapse));
+    }
+
+    public void Ungroup()
+    {
+        Ungroup(false);
     }
 
     public void Ungroup(bool fromAll)
