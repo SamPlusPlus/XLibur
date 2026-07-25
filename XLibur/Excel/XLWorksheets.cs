@@ -145,6 +145,29 @@ internal sealed class XLWorksheets : IXLWorksheets, IEnumerable<XLWorksheet>
         _workbook.NotifyWorksheetAdded(sheet);
     }
 
+    public IXLWorksheet Add(DataTable dataTable)
+    {
+        return Add(dataTable, dataTable.TableName);
+    }
+
+    public IXLWorksheet Add(DataTable dataTable, string sheetName)
+    {
+        return Add(dataTable, sheetName, TableNameGenerator.GetNewTableName(_workbook));
+    }
+
+    public IXLWorksheet Add(DataTable dataTable, string sheetName, string tableName)
+    {
+        var ws = Add(sheetName);
+        ws.Cell(1, 1).InsertTable(dataTable, tableName);
+        return ws;
+    }
+
+    public void Add(DataSet dataSet)
+    {
+        foreach (DataTable t in dataSet.Tables)
+            Add(t);
+    }
+
     public void Delete(string sheetName)
     {
         ArgumentException.ThrowIfNullOrEmpty(sheetName);
@@ -182,29 +205,6 @@ internal sealed class XLWorksheets : IXLWorksheets, IEnumerable<XLWorksheet>
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
-    }
-
-    public IXLWorksheet Add(DataTable dataTable)
-    {
-        return Add(dataTable, dataTable.TableName);
-    }
-
-    public IXLWorksheet Add(DataTable dataTable, string sheetName)
-    {
-        return Add(dataTable, sheetName, TableNameGenerator.GetNewTableName(_workbook));
-    }
-
-    public IXLWorksheet Add(DataTable dataTable, string sheetName, string tableName)
-    {
-        var ws = Add(sheetName);
-        ws.Cell(1, 1).InsertTable(dataTable, tableName);
-        return ws;
-    }
-
-    public void Add(DataSet dataSet)
-    {
-        foreach (DataTable t in dataSet.Tables)
-            Add(t);
     }
 
     #endregion IXLWorksheets Members
