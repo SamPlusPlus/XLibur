@@ -27,12 +27,6 @@ internal static class XmlWriterExtensions
             w.WriteEndAttribute();
         }
 
-        public void WriteAttributeOptional(string attrName, string? value)
-        {
-            if (!string.IsNullOrEmpty(value))
-                w.WriteAttribute(attrName, value);
-        }
-
         public void WriteAttribute(string attrName, int value)
         {
             w.WriteStartAttribute(attrName);
@@ -47,18 +41,6 @@ internal static class XmlWriterExtensions
             w.WriteEndAttribute();
         }
 
-        public void WriteAttributeOptional(string attrName, uint? value)
-        {
-            if (value is not null)
-                w.WriteAttribute(attrName, value.Value);
-        }
-
-        public void WriteAttributeOptional(string attrName, int? value)
-        {
-            if (value is not null)
-                w.WriteAttribute(attrName, value.Value);
-        }
-
         public void WriteAttribute(string attrName, double value)
         {
             w.WriteStartAttribute(attrName);
@@ -71,30 +53,6 @@ internal static class XmlWriterExtensions
             w.WriteStartAttribute(attrName);
             w.WriteValue(value ? "1" : "0");
             w.WriteEndAttribute();
-        }
-
-        public void WriteAttributeDefault(string attrName, bool value, bool defaultValue)
-        {
-            if (value != defaultValue)
-                w.WriteAttribute(attrName, value);
-        }
-
-        public void WriteAttributeOptional(string attrName, bool? value)
-        {
-            if (value is not null)
-                w.WriteAttribute(attrName, value.Value);
-        }
-
-        public void WriteAttributeDefault(string attrName, int value, int defaultValue)
-        {
-            if (value != defaultValue)
-                w.WriteAttribute(attrName, value);
-        }
-
-        public void WriteAttributeDefault(string attrName, uint value, uint defaultValue)
-        {
-            if (value != defaultValue)
-                w.WriteAttribute(attrName, value);
         }
 
         /// <summary>
@@ -112,6 +70,48 @@ internal static class XmlWriterExtensions
             w.WriteStartAttribute(attrName, ns);
             w.WriteNumberValue(value);
             w.WriteEndAttribute();
+        }
+
+        public void WriteAttributeOptional(string attrName, string? value)
+        {
+            if (!string.IsNullOrEmpty(value))
+                w.WriteAttribute(attrName, value);
+        }
+
+        public void WriteAttributeOptional(string attrName, uint? value)
+        {
+            if (value is not null)
+                w.WriteAttribute(attrName, value.Value);
+        }
+
+        public void WriteAttributeOptional(string attrName, int? value)
+        {
+            if (value is not null)
+                w.WriteAttribute(attrName, value.Value);
+        }
+
+        public void WriteAttributeOptional(string attrName, bool? value)
+        {
+            if (value is not null)
+                w.WriteAttribute(attrName, value.Value);
+        }
+
+        public void WriteAttributeDefault(string attrName, bool value, bool defaultValue)
+        {
+            if (value != defaultValue)
+                w.WriteAttribute(attrName, value);
+        }
+
+        public void WriteAttributeDefault(string attrName, int value, int defaultValue)
+        {
+            if (value != defaultValue)
+                w.WriteAttribute(attrName, value);
+        }
+
+        public void WriteAttributeDefault(string attrName, uint value, uint defaultValue)
+        {
+            if (value != defaultValue)
+                w.WriteAttribute(attrName, value);
         }
 
         /// <summary>
