@@ -57,6 +57,13 @@ public class ChartRoundTripPreservationTests
                     <c:showBubbleSize val="0"/>
                   </c:dLbls>
                   <c:trendline><c:trendlineType val="linear"/></c:trendline>
+                  <c:errBars>
+                    <c:errDir val="y"/>
+                    <c:errBarType val="both"/>
+                    <c:errValType val="percentage"/>
+                    <c:noEndCap val="0"/>
+                    <c:val val="5"/>
+                  </c:errBars>
                   <c:cat><c:strRef><c:f>Data!$A$1:$A$2</c:f></c:strRef></c:cat>
                   <c:val><c:numRef><c:f>Data!$B$1:$B$2</c:f></c:numRef></c:val>
                 </c:ser>
@@ -268,6 +275,8 @@ public class ChartRoundTripPreservationTests
 
         // Everything XLibur does not model survived.
         Assert.That(xml, Does.Contain("<c:trendline>"));
+        Assert.That(xml, Does.Contain("<c:errBars>"));
+        Assert.That(xml, Does.Contain("<c:errValType val=\"percentage\""));
         Assert.That(xml, Does.Contain("cap=\"rnd\""));
         Assert.That(xml, Does.Contain("<a:round"));
         Assert.That(xml, Does.Contain("<a:effectLst"));
@@ -386,6 +395,33 @@ public class ChartRoundTripPreservationTests
             Assert.That(labels.ShowValue, Is.True);
             Assert.That(labels.Position, Is.EqualTo(XLDataLabelPosition.Above));
         }
+    }
+
+    [Test]
+    public void ChartWideLabelsReachEveryGroupOfALoadedComboChart()
+    {
+        using var original = CreateWorkbookWithExcelShapedChart();
+        using var saved = new MemoryStream();
+
+        using (var wb = new XLWorkbook(original))
+        {
+            // Chart-wide labels apply to the whole chart, and the writer puts them on each group of a
+            // new combo chart. A loaded one used to get them on the c:barChart only.
+            wb.Worksheet("Data").Charts.First().DataLabels.ShowValue = true;
+            wb.SaveAs(saved, validate: true);
+        }
+
+        var xml = ReadChartXml(saved);
+        var barChart = xml[xml.IndexOf("<c:barChart>", StringComparison.Ordinal)..
+                           xml.IndexOf("</c:barChart>", StringComparison.Ordinal)];
+        var lineChart = xml[xml.IndexOf("<c:lineChart>", StringComparison.Ordinal)..
+                            xml.IndexOf("</c:lineChart>", StringComparison.Ordinal)];
+
+        // The group-level c:dLbls follows the last c:ser, so it is what comes after </c:ser>.
+        Assert.That(barChart[barChart.LastIndexOf("</c:ser>", StringComparison.Ordinal)..],
+            Does.Contain("<c:showVal val=\"1\""));
+        Assert.That(lineChart[lineChart.LastIndexOf("</c:ser>", StringComparison.Ordinal)..],
+            Does.Contain("<c:showVal val=\"1\""));
     }
 
     [Test]
