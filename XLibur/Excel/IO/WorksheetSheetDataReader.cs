@@ -483,11 +483,15 @@ internal static class WorksheetSheetDataReader
         return formula;
     }
 
+    /// <summary>
+    /// Loads a classic or dynamic array formula from a master <c>&lt;f t="array"&gt;</c> cell.
+    /// Child cells of an array may have an array type but no <c>ref</c> (reserved for the master cell);
+    /// callers only invoke this when <c>ref</c> is present.
+    /// </summary>
     private static XLCellFormula LoadArrayFormulaXml(string formulaText, string refAttr, bool aca,
         XLSheetPoint cellAddress, uint? cellMetaIndex, HashSet<uint>? dynamicArrayCmIndexes,
         FormulaSlice formulaSlice)
     {
-        // Child cells of an array may have an array type but no ref (reserved for the master cell).
         var arrayArea = XLSheetRange.Parse(refAttr);
         var isDynamicArray = cellMetaIndex is { } cm &&
                              dynamicArrayCmIndexes is not null &&
