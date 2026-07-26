@@ -266,11 +266,6 @@ internal readonly struct XLRangeAddress : IXLRangeAddress, IEquatable<XLRangeAdd
         return ToStringRelative(false);
     }
 
-    public string ToStringFixed()
-    {
-        return ToStringFixed(XLReferenceStyle.A1);
-    }
-
     public string ToStringRelative(bool includeSheet)
     {
         string address;
@@ -294,6 +289,11 @@ internal readonly struct XLRangeAddress : IXLRangeAddress, IEquatable<XLRangeAdd
                 "!", address);
 
         return address;
+    }
+
+    public string ToStringFixed()
+    {
+        return ToStringFixed(XLReferenceStyle.A1);
     }
 
     public string ToStringFixed(XLReferenceStyle referenceStyle)
@@ -391,6 +391,13 @@ internal readonly struct XLRangeAddress : IXLRangeAddress, IEquatable<XLRangeAdd
                EqualityComparer<XLWorksheet?>.Default.Equals(Worksheet, address.Worksheet);
     }
 
+    public bool Equals(XLRangeAddress other)
+    {
+        return ReferenceEquals(Worksheet, other.Worksheet) &&
+               FirstAddress == other.FirstAddress &&
+               LastAddress == other.LastAddress;
+    }
+
     public override int GetHashCode()
     {
         var hashCode = -778064135;
@@ -398,13 +405,6 @@ internal readonly struct XLRangeAddress : IXLRangeAddress, IEquatable<XLRangeAdd
         hashCode = hashCode * -1521134295 + LastAddress.GetHashCode();
         hashCode = hashCode * -1521134295 + EqualityComparer<XLWorksheet?>.Default.GetHashCode(Worksheet!);
         return hashCode;
-    }
-
-    public bool Equals(XLRangeAddress other)
-    {
-        return ReferenceEquals(Worksheet, other.Worksheet) &&
-               FirstAddress == other.FirstAddress &&
-               LastAddress == other.LastAddress;
     }
 
     public bool IsSingleCell()
