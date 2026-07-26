@@ -1347,17 +1347,9 @@ internal static class WorksheetSheetDataReader
 
     /// <summary>
     /// Fast-path parser for non-negative integer strings as found in OOXML shared string
-    /// indices. Only accepts pure ASCII digit sequences with no whitespace or signs.
+    /// indices and similar attributes. Only accepts pure ASCII digit sequences with no
+    /// whitespace or signs.
     /// </summary>
-    /// <summary>
-    /// Parse a row index attribute value. Row indices in OOXML are always positive integers.
-    /// </summary>
-    private static int ParseRowIndex(ReadOnlySpan<char> s)
-    {
-        TryParseOoxmlNonNegativeInt(s, out var result);
-        return result;
-    }
-
     private static bool TryParseOoxmlNonNegativeInt(ReadOnlySpan<char> s, out int result)
     {
         result = 0;
