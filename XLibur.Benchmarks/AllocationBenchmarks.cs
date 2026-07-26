@@ -78,11 +78,11 @@ public class AllocationBenchmarks
         SixLaborsV1FontBootstrap.Register();
         _workbook = new XLWorkbook();
         _worksheet = (XLWorksheet)_workbook.AddWorksheet("Data");
-        _shiftRange = (XLRange)_worksheet.Range("A1:Z1000");
+        _shiftRange = _worksheet.Range("A1:Z1000");
 
         _emptyCells = new XLCell[Colors.Length];
         for (var i = 0; i < _emptyCells.Length; i++)
-            _emptyCells[i] = (XLCell)_worksheet.Cell(i + 1, 40); // untouched, still empty
+            _emptyCells[i] = _worksheet.Cell(i + 1, 40); // untouched, still empty
     }
 
     [GlobalCleanup]
