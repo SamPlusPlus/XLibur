@@ -66,6 +66,10 @@ jobs:
         if: env.SONAR_TOKEN != ''
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        # S3220: OpenXmlElement has both params[] and IEnumerable ctors, and implements
+        # IEnumerable, so Sonar flags every one-child construction. The C# compiler binds
+        # to params correctly (dotnet/Open-XML-SDK#1136). Ignoring the rule avoids a large
+        # amount of noise for no practical safety gain.
         run: >
           dotnet sonarscanner begin
           /k:"XLibur_XLibur"
@@ -74,6 +78,9 @@ jobs:
           /d:sonar.host.url="https://sonarcloud.io"
           /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
           /d:sonar.coverage.exclusions="XLibur.Examples/**,XLibur.Benchmarks/**"
+          /d:sonar.issue.ignore.multicriteria=e1
+          /d:sonar.issue.ignore.multicriteria.e1.ruleKey=csharpsquid:S3220
+          /d:sonar.issue.ignore.multicriteria.e1.resourceKey=**/*
 
       - name: Build
         run: dotnet build XLibur.slnx --configuration Release --no-restore
