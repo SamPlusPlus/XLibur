@@ -955,7 +955,7 @@ internal static class ChartWriter
         chartElement.Append(new C.AxisId { Val = group.ValAxisIdOfGroup });
     }
 
-    private static void AppendCatAndVal(OpenXmlCompositeElement series, IXLChartSeries s)
+    private static void AppendCatAndVal(OpenXmlCompositeElement series, XLChartSeries s)
     {
         if (!string.IsNullOrWhiteSpace(s.CategoryReferences))
         {
@@ -968,7 +968,7 @@ internal static class ChartWriter
         ));
     }
 
-    private static void AppendXAndY(OpenXmlCompositeElement series, IXLChartSeries s)
+    private static void AppendXAndY(OpenXmlCompositeElement series, XLChartSeries s)
     {
         if (!string.IsNullOrWhiteSpace(s.CategoryReferences))
         {
@@ -1031,7 +1031,7 @@ internal static class ChartWriter
     /// <c>c:strRef</c>, is for names that come from a cell and requires a <c>c:f</c> formula, which
     /// a literal name does not have.
     /// </summary>
-    private static C.SeriesText BuildSeriesText(IXLChartSeries s) =>
+    private static C.SeriesText BuildSeriesText(XLChartSeries s) =>
         new(new C.NumericValue(s.Name));
 
     /// <summary>EMU per pixel, the unit the drawing markers and extents are stored in.</summary>
