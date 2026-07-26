@@ -312,6 +312,16 @@ internal sealed class XLDataValidation : IXLDataValidation
         Value = QuoteListValueIfNeeded(list);
     }
 
+    public void List(IXLRange range)
+    {
+        List(range, true);
+    }
+
+    public void List(IXLRange range, bool inCellDropdown)
+    {
+        List(range.RangeAddress.ToStringFixed(XLReferenceStyle.A1, true));
+    }
+
     private string QuoteListValueIfNeeded(string list)
     {
         if (list.Length == 0 || list[0] == '=' || list[0] == '"')
@@ -325,16 +335,6 @@ internal sealed class XLDataValidation : IXLDataValidation
             return list;
 
         return "\"" + list + "\"";
-    }
-
-    public void List(IXLRange range)
-    {
-        List(range, true);
-    }
-
-    public void List(IXLRange range, bool inCellDropdown)
-    {
-        List(range.RangeAddress.ToStringFixed(XLReferenceStyle.A1, true));
     }
 
     /// <summary>
