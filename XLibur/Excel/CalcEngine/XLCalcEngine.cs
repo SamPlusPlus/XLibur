@@ -45,10 +45,10 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
     /// A dynamic array's spill footprint (including the anchor at <see cref="Range"/>'s first
     /// point) together with the owning formula.
     /// </summary>
-    private readonly struct SpillFootprint(uint sheetId, XLSheetRange range, XLCellFormula owner)
+    private readonly struct SpillFootprint(uint sheetId, Area range, XLCellFormula owner)
     {
         internal readonly uint SheetId = sheetId;
-        internal readonly XLSheetRange Range = range;
+        internal readonly Area Range = range;
         internal readonly XLCellFormula Owner = owner;
     }
 
@@ -82,11 +82,11 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
     /// <summary>
     /// Add an array formula to the calc engine to manage dirty tracking and evaluation.
     /// </summary>
-    internal void AddArrayFormula(XLSheetRange range, XLCellFormula arrayFormula, XLWorksheet sheet)
+    internal void AddArrayFormula(Area range, XLCellFormula arrayFormula, XLWorksheet sheet)
     {
         if (_chain is not null && _dependencyTree is not null)
         {
-            _dependencyTree.AddFormula(new XLBookArea(sheet.Name, range), arrayFormula, sheet.Workbook);
+            _dependencyTree.AddFormula(new SheetArea(sheet.Name, range), arrayFormula, sheet.Workbook);
             _chain.AppendArea(sheet.SheetId, range);
         }
     }
@@ -94,11 +94,11 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
     /// <summary>
     /// Add a formula to the calc engine to manage dirty tracking and evaluation.
     /// </summary>
-    internal void AddNormalFormula(XLBookPoint point, string sheetName, XLCellFormula formula, XLWorkbook workbook)
+    internal void AddNormalFormula(SheetPoint point, string sheetName, XLCellFormula formula, XLWorkbook workbook)
     {
         if (_chain is not null && _dependencyTree is not null)
         {
-            var pointArea = new XLBookArea(sheetName, new XLSheetRange(point.Point, point.Point));
+            var pointArea = new SheetArea(sheetName, new Area(point.Point, point.Point));
             _dependencyTree.AddFormula(pointArea, formula, workbook);
             _chain.AddLast(point);
         }
@@ -111,7 +111,7 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
     /// it is fully removed from dependency tree, but each cells referencing
     /// the formula must be removed individually from calc chain.
     /// </summary>
-    internal void RemoveFormula(XLBookPoint point, XLCellFormula formula)
+    internal void RemoveFormula(SheetPoint point, XLCellFormula formula)
     {
         if (_chain is not null && _dependencyTree is not null)
         {
@@ -130,22 +130,22 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
         Purge(sheet.Workbook.WorksheetsInternal);
     }
 
-    public void OnInsertAreaAndShiftDown(XLWorksheet sheet, XLSheetRange area)
+    public void OnInsertAreaAndShiftDown(XLWorksheet sheet, Area area)
     {
         Purge(sheet.Workbook.WorksheetsInternal);
     }
 
-    public void OnInsertAreaAndShiftRight(XLWorksheet sheet, XLSheetRange area)
+    public void OnInsertAreaAndShiftRight(XLWorksheet sheet, Area area)
     {
         Purge(sheet.Workbook.WorksheetsInternal);
     }
 
-    public void OnDeleteAreaAndShiftLeft(XLWorksheet sheet, XLSheetRange deletedRange)
+    public void OnDeleteAreaAndShiftLeft(XLWorksheet sheet, Area deletedRange)
     {
         Purge(sheet.Workbook.WorksheetsInternal);
     }
 
-    public void OnDeleteAreaAndShiftUp(XLWorksheet sheet, XLSheetRange deletedRange)
+    public void OnDeleteAreaAndShiftUp(XLWorksheet sheet, Area deletedRange)
     {
         Purge(sheet.Workbook.WorksheetsInternal);
     }
@@ -160,16 +160,16 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
         // Mark everything as dirty, because there can be stale values
         foreach (var sheet in sheets)
         {
-            sheet.Internals.CellsCollection.FormulaSlice.MarkDirty(XLSheetRange.Full);
+            sheet.Internals.CellsCollection.FormulaSlice.MarkDirty(Area.Full);
         }
     }
 
-    internal void MarkDirty(XLWorksheet sheet, XLSheetPoint point)
+    internal void MarkDirty(XLWorksheet sheet, Point point)
     {
-        MarkDirty(sheet, new XLSheetRange(point, point));
+        MarkDirty(sheet, new Area(point, point));
     }
 
-    internal void MarkDirty(XLWorksheet sheet, XLSheetRange area)
+    internal void MarkDirty(XLWorksheet sheet, Area area)
     {
         if (_dependencyTree is null && _needsDependencyTree)
         {
@@ -179,7 +179,7 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
 
         if (_dependencyTree is not null)
         {
-            var bookArea = new XLBookArea(sheet.Name, area);
+            var bookArea = new SheetArea(sheet.Name, area);
             _dependencyTree.MarkDirty(bookArea);
         }
     }
@@ -191,7 +191,7 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
     /// to full workbook recalculation which handles dependency ordering.
     /// </summary>
     /// <returns><c>true</c> if single-cell eval succeeded, <c>false</c> if full recalculate was used.</returns>
-    internal bool TryEvaluateSingleCell(XLCellFormula formula, XLSheetPoint point, XLWorksheet sheet)
+    internal bool TryEvaluateSingleCell(XLCellFormula formula, Point point, XLWorksheet sheet)
     {
         // DataTable formulas need the full chain for correct evaluation.
         if (formula.Type == FormulaType.DataTable)
@@ -231,7 +231,7 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
                         var cellValue = result[rowIdx, colIdx];
                         var row = range.FirstPoint.Row + rowIdx;
                         var column = range.FirstPoint.Column + colIdx;
-                        valueSlice.SetCellValue(new XLSheetPoint(row, column), cellValue.ToCellValue());
+                        valueSlice.SetCellValue(new Point(row, column), cellValue.ToCellValue());
                     }
                 }
             }
@@ -318,7 +318,7 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
         }
     }
 
-    private void ApplyFormula(XLCellFormula formula, XLSheetPoint appliedPoint, XLWorksheet sheet, ValueSlice valueSlice, uint? recalculateSheetId)
+    private void ApplyFormula(XLCellFormula formula, Point appliedPoint, XLWorksheet sheet, ValueSlice valueSlice, uint? recalculateSheetId)
     {
         var formulaText = formula.A1;
         if (formula.IsDynamicArray)
@@ -357,7 +357,7 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
                     var cellValue = result[rowIdx, colIdx];
                     var row = range.FirstPoint.Row + rowIdx;
                     var column = range.FirstPoint.Column + colIdx;
-                    valueSlice.SetCellValue(new XLSheetPoint(row, column), cellValue.ToCellValue());
+                    valueSlice.SetCellValue(new Point(row, column), cellValue.ToCellValue());
                 }
             }
         }
@@ -434,7 +434,7 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
     /// edge, or when any footprint cell (other than the anchor, and other than a cell owned by
     /// this formula's previous footprint) already holds a formula or a non-blank value.
     /// </remarks>
-    private void SpillDynamicArray(XLCellFormula formula, XLSheetPoint anchor, XLWorksheet sheet, uint? recalculateSheetId)
+    private void SpillDynamicArray(XLCellFormula formula, Point anchor, XLWorksheet sheet, uint? recalculateSheetId)
     {
         var cells = sheet.Internals.CellsCollection;
         var valueSlice = cells.ValueSlice;
@@ -447,9 +447,9 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
         var lastColumn = anchor.Column + array.Width - 1;
 
         var previousRange = formula.Range;
-        var anchorRange = new XLSheetRange(anchor);
+        var anchorRange = new Area(anchor);
 
-        XLSheetRange newFootprint;
+        Area newFootprint;
         var outOfBounds = lastRow > XLHelper.MaxRowNumber || lastColumn > XLHelper.MaxColumnNumber;
         if (outOfBounds || HasSpillCollision(anchor, lastRow, lastColumn, previousRange, valueSlice, formulaSlice))
         {
@@ -459,7 +459,7 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
         }
         else
         {
-            newFootprint = new XLSheetRange(anchor, new XLSheetPoint(lastRow, lastColumn));
+            newFootprint = new Area(anchor, new Point(lastRow, lastColumn));
 
             // Erase any cell of the previous footprint that the new one no longer covers
             // (the array shrank or moved) before writing the fresh result.
@@ -469,7 +469,7 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
             {
                 for (var colOffset = 0; colOffset < array.Width; ++colOffset)
                 {
-                    var point = new XLSheetPoint(anchor.Row + rowOffset, anchor.Column + colOffset);
+                    var point = new Point(anchor.Row + rowOffset, anchor.Column + colOffset);
                     valueSlice.SetCellValue(point, array[rowOffset, colOffset].ToCellValue());
                 }
             }
@@ -486,7 +486,7 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
         // (not just the anchor). Only needed once the tree exists and the footprint changed.
         if (_dependencyTree is not null && newFootprint != previousRange)
         {
-            var formulaArea = new XLBookArea(sheet.Name, newFootprint);
+            var formulaArea = new SheetArea(sheet.Name, newFootprint);
             _dependencyTree.UpdateSpillFootprint(formulaArea, formula, sheet.Workbook);
         }
     }
@@ -501,7 +501,7 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
         _spillOwners.Clear();
         foreach (var sheet in wb.WorksheetsInternal)
         {
-            using var enumerator = sheet.Internals.CellsCollection.FormulaSlice.GetForwardEnumerator(XLSheetRange.Full);
+            using var enumerator = sheet.Internals.CellsCollection.FormulaSlice.GetForwardEnumerator(Area.Full);
             while (enumerator.MoveNext())
             {
                 var formula = enumerator.Current;
@@ -515,7 +515,7 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
     /// Records a dynamic-array formula's current spill footprint, replacing any prior footprint
     /// for the same formula (footprints never overlap, so one rectangle per formula is enough).
     /// </summary>
-    private void SetSpillFootprint(uint sheetId, XLCellFormula formula, XLSheetRange footprint)
+    private void SetSpillFootprint(uint sheetId, XLCellFormula formula, Area footprint)
     {
         for (var i = 0; i < _spillOwners.Count; i++)
         {
@@ -534,7 +534,7 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
     /// is dirty, returns the anchor point so the caller can force the anchor to evaluate first.
     /// The anchor cell itself holds a formula, so it never reaches this lookup.
     /// </summary>
-    internal bool TryGetDirtySpillOwner(uint sheetId, XLSheetPoint point, XLWorkbook wb, out XLSheetPoint anchor)
+    internal bool TryGetDirtySpillOwner(uint sheetId, Point point, XLWorkbook wb, out Point anchor)
     {
         foreach (var footprint in _spillOwners)
         {
@@ -555,13 +555,13 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
     /// previous footprint, which will be overwritten) never block; any other cell holding a
     /// formula or a non-blank value does.
     /// </summary>
-    private static bool HasSpillCollision(XLSheetPoint anchor, int lastRow, int lastColumn, XLSheetRange ownedRange, ValueSlice valueSlice, FormulaSlice formulaSlice)
+    private static bool HasSpillCollision(Point anchor, int lastRow, int lastColumn, Area ownedRange, ValueSlice valueSlice, FormulaSlice formulaSlice)
     {
         for (var row = anchor.Row; row <= lastRow; ++row)
         {
             for (var column = anchor.Column; column <= lastColumn; ++column)
             {
-                var point = new XLSheetPoint(row, column);
+                var point = new Point(row, column);
                 if (point == anchor || ownedRange.Contains(point))
                     continue;
 
@@ -582,7 +582,7 @@ internal sealed class XLCalcEngine : ISheetListener, IWorkbookListener
     /// shrinks, moves, or collapses to a <c>#SPILL!</c> anchor. A <c>default</c> previous
     /// range (never spilled) clears nothing.
     /// </summary>
-    private static void ClearSpillFootprint(XLSheetRange previousRange, XLSheetRange keepRange, ValueSlice valueSlice)
+    private static void ClearSpillFootprint(Area previousRange, Area keepRange, ValueSlice valueSlice)
     {
         if (previousRange == default)
             return;

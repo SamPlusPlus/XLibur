@@ -22,14 +22,14 @@ internal sealed class XLCell : XLStylizedBase, IXLCell, IXLStylized
 {
     private readonly XLCellsCollection _cellsCollection;
 
-    private readonly XLSheetPoint _point;
+    private readonly Point _point;
 
     internal XLCell(XLWorksheet worksheet, int row, int column)
-        : this(worksheet, new XLSheetPoint(row, column))
+        : this(worksheet, new Point(row, column))
     {
     }
 
-    internal XLCell(XLWorksheet worksheet, XLSheetPoint point)
+    internal XLCell(XLWorksheet worksheet, Point point)
     {
         _cellsCollection = worksheet.Internals.CellsCollection;
         _point = point;
@@ -39,7 +39,7 @@ internal sealed class XLCell : XLStylizedBase, IXLCell, IXLStylized
 
     public XLAddress Address => new(Worksheet, _point.Row, _point.Column, false, false);
 
-    internal XLSheetPoint SheetPoint => _point;
+    internal Point SheetPoint => _point;
 
     #region Slice fields
 
@@ -221,7 +221,7 @@ internal sealed class XLCell : XLStylizedBase, IXLCell, IXLStylized
 
         if (setTableHeader && Worksheet.Tables.Count > 0)
         {
-            var cellRange = new XLSheetRange(point, point);
+            var cellRange = new Area(point, point);
             foreach (var table in Worksheet.Tables)
                 table.RefreshFieldsFromCells(cellRange);
         }
@@ -233,7 +233,7 @@ internal sealed class XLCell : XLStylizedBase, IXLCell, IXLStylized
     /// Set value of a cell and its format (if necessary) from the passed value.
     /// It doesn't clear formulas or checks merged cells or tables.
     /// </summary>
-    private void SetValueAndStyle(XLCellValue value, XLSheetPoint point)
+    private void SetValueAndStyle(XLCellValue value, Point point)
     {
         var modifiedStyleValue = Worksheet.GetStyleForValue(value, point);
         if (modifiedStyleValue is not null)
@@ -1179,7 +1179,7 @@ internal sealed class XLCell : XLStylizedBase, IXLCell, IXLStylized
     /// the (already-moved) spilled values as a <c>#SPILL!</c> collision, and the plain setter
     /// would also drop the dynamic-array flag (losing the <c>cm</c> metadata on save).
     /// </summary>
-    private static void ShiftDynamicArrayFormula(XLCellFormula formula, string shiftedA1, bool sameSheet, Func<XLSheetRange> shiftRange)
+    private static void ShiftDynamicArrayFormula(XLCellFormula formula, string shiftedA1, bool sameSheet, Func<Area> shiftRange)
     {
         if (!string.Equals(shiftedA1, formula.A1, StringComparison.Ordinal))
             formula.UpdateShiftedA1(shiftedA1);
@@ -1202,7 +1202,7 @@ internal sealed class XLCell : XLStylizedBase, IXLCell, IXLStylized
     /// part of an array) the range is left unchanged rather than producing a torn or out-of-bounds
     /// range — e.g. deleting rows that overlap the array must not push its top below row 1.
     /// </summary>
-    private static XLSheetRange ShiftArrayRangeRows(XLSheetRange arrayRange, XLRange shiftedRange, int rowsShifted)
+    private static Area ShiftArrayRangeRows(Area arrayRange, XLRange shiftedRange, int rowsShifted)
     {
         var addr = shiftedRange.RangeAddress;
         var firstColumn = addr.FirstAddress.ColumnNumber;
@@ -1222,15 +1222,15 @@ internal sealed class XLCell : XLStylizedBase, IXLCell, IXLStylized
         if (arrayRange.TopRow < movedRegionTop)
             return arrayRange;
 
-        return new XLSheetRange(
-            new XLSheetPoint(arrayRange.FirstPoint.Row + rowsShifted, arrayRange.FirstPoint.Column),
-            new XLSheetPoint(arrayRange.LastPoint.Row + rowsShifted, arrayRange.LastPoint.Column));
+        return new Area(
+            new Point(arrayRange.FirstPoint.Row + rowsShifted, arrayRange.FirstPoint.Column),
+            new Point(arrayRange.LastPoint.Row + rowsShifted, arrayRange.LastPoint.Column));
     }
 
     /// <summary>
     /// Column-shift counterpart of <see cref="ShiftArrayRangeRows"/>.
     /// </summary>
-    private static XLSheetRange ShiftArrayRangeColumns(XLSheetRange arrayRange, XLRange shiftedRange, int columnsShifted)
+    private static Area ShiftArrayRangeColumns(Area arrayRange, XLRange shiftedRange, int columnsShifted)
     {
         var addr = shiftedRange.RangeAddress;
         var firstRow = addr.FirstAddress.RowNumber;
@@ -1246,9 +1246,9 @@ internal sealed class XLCell : XLStylizedBase, IXLCell, IXLStylized
         if (arrayRange.LeftColumn < movedRegionLeft)
             return arrayRange;
 
-        return new XLSheetRange(
-            new XLSheetPoint(arrayRange.FirstPoint.Row, arrayRange.FirstPoint.Column + columnsShifted),
-            new XLSheetPoint(arrayRange.LastPoint.Row, arrayRange.LastPoint.Column + columnsShifted));
+        return new Area(
+            new Point(arrayRange.FirstPoint.Row, arrayRange.FirstPoint.Column + columnsShifted),
+            new Point(arrayRange.LastPoint.Row, arrayRange.LastPoint.Column + columnsShifted));
     }
 
     private XLCell CellShift(int rowsToShift, int columnsToShift)
@@ -1388,7 +1388,7 @@ internal sealed class XLCell : XLStylizedBase, IXLCell, IXLStylized
             if (value.Worksheet is not null && Worksheet != value.Worksheet)
                 throw new ArgumentException("The reference worksheet must be same as worksheet of the cell or null.");
 
-            Formula.Range = XLSheetRange.FromRangeAddress(value);
+            Formula.Range = Area.FromRangeAddress(value);
         }
     }
 

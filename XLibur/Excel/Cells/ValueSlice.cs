@@ -32,27 +32,27 @@ internal sealed class ValueSlice : ISlice
 
     public IEnumerable<int> UsedRows => _values.UsedRows;
 
-    public void Clear(XLSheetRange range)
+    public void Clear(Area range)
     {
         DereferenceTextInRange(range);
         _values.Clear(range);
     }
 
-    public void DeleteAreaAndShiftLeft(XLSheetRange rangeToDelete)
+    public void DeleteAreaAndShiftLeft(Area rangeToDelete)
     {
         DereferenceTextInRange(rangeToDelete);
         _values.DeleteAreaAndShiftLeft(rangeToDelete);
     }
 
-    public void DeleteAreaAndShiftUp(XLSheetRange rangeToDelete)
+    public void DeleteAreaAndShiftUp(Area rangeToDelete)
     {
         DereferenceTextInRange(rangeToDelete);
         _values.DeleteAreaAndShiftUp(rangeToDelete);
     }
 
-    public IEnumerator<XLSheetPoint> GetEnumerator(XLSheetRange range, bool reverse = false) => _values.GetEnumerator(range, reverse);
+    public IEnumerator<Point> GetEnumerator(Area range, bool reverse = false) => _values.GetEnumerator(range, reverse);
 
-    public void InsertAreaAndShiftDown(XLSheetRange range)
+    public void InsertAreaAndShiftDown(Area range)
     {
         // Only pushed out references have to be dereferenced, other text references just move.
         if (range.BottomRow < XLHelper.MaxRowNumber)
@@ -66,7 +66,7 @@ internal sealed class ValueSlice : ISlice
         _values.InsertAreaAndShiftDown(range);
     }
 
-    public void InsertAreaAndShiftRight(XLSheetRange range)
+    public void InsertAreaAndShiftRight(Area range)
     {
         // Only pushed out references have to be dereferenced, other text references just move.
         if (range.RightColumn < XLHelper.MaxColumnNumber)
@@ -80,11 +80,11 @@ internal sealed class ValueSlice : ISlice
         _values.InsertAreaAndShiftRight(range);
     }
 
-    public bool IsUsed(XLSheetPoint address) => _values.IsUsed(address);
+    public bool IsUsed(Point address) => _values.IsUsed(address);
 
-    public void Swap(XLSheetPoint sp1, XLSheetPoint sp2) => _values.Swap(sp1, sp2);
+    public void Swap(Point sp1, Point sp2) => _values.Swap(sp1, sp2);
 
-    internal XLCellValue GetCellValue(XLSheetPoint point)
+    internal XLCellValue GetCellValue(Point point)
     {
         ref readonly var cellValue = ref _values[point];
         var type = cellValue.Type;
@@ -102,7 +102,7 @@ internal sealed class ValueSlice : ISlice
         };
     }
 
-    internal void SetCellValue(XLSheetPoint point, XLCellValue cellValue)
+    internal void SetCellValue(Point point, XLCellValue cellValue)
     {
         ref readonly var original = ref _values[point];
 
@@ -158,7 +158,7 @@ internal sealed class ValueSlice : ISlice
     /// <c>true</c> for formula result text (not in the shared string table);
     /// <c>false</c> (default) for normal data cells.
     /// </param>
-    internal void SetCellValueDuringLoad(XLSheetPoint point, XLCellValue cellValue, bool inline = false)
+    internal void SetCellValueDuringLoad(Point point, XLCellValue cellValue, bool inline = false)
     {
         double value;
         if (cellValue.Type == XLDataType.Text)
@@ -187,7 +187,7 @@ internal sealed class ValueSlice : ISlice
         _values.SetNonDefault(point, in modified);
     }
 
-    internal XLImmutableRichText? GetRichText(XLSheetPoint point)
+    internal XLImmutableRichText? GetRichText(Point point)
     {
         ref readonly var cellValue = ref _values[point];
         if (cellValue.Type != XLDataType.Text)
@@ -197,7 +197,7 @@ internal sealed class ValueSlice : ISlice
         return _sst.GetRichText((int)value);
     }
 
-    internal void SetRichText(XLSheetPoint point, XLImmutableRichText richText)
+    internal void SetRichText(Point point, XLImmutableRichText richText)
     {
         ArgumentNullException.ThrowIfNull(richText);
 
@@ -220,7 +220,7 @@ internal sealed class ValueSlice : ISlice
     /// Get cell value and share-string flag in a single slice lookup, avoiding a
     /// second Lut traversal when both are needed (e.g., during save).
     /// </summary>
-    internal XLCellValue GetCellValueAndShareString(XLSheetPoint point, out bool shareString)
+    internal XLCellValue GetCellValueAndShareString(Point point, out bool shareString)
     {
         ref readonly var cellValue = ref _values[point];
         shareString = !cellValue.Inline;
@@ -239,12 +239,12 @@ internal sealed class ValueSlice : ISlice
         };
     }
 
-    internal bool GetShareString(XLSheetPoint point)
+    internal bool GetShareString(Point point)
     {
         return !_values[point].Inline;
     }
 
-    internal void SetShareString(XLSheetPoint point, bool shareString)
+    internal void SetShareString(Point point, bool shareString)
     {
         var inlineString = !shareString;
         ref readonly var original = ref _values[point];
@@ -276,7 +276,7 @@ internal sealed class ValueSlice : ISlice
         _values.Set(point, in modified);
     }
 
-    internal int GetShareStringId(XLSheetPoint point)
+    internal int GetShareStringId(Point point)
     {
         ref readonly var value = ref _values[point];
         if (value.Type != XLDataType.Text)
@@ -288,9 +288,9 @@ internal sealed class ValueSlice : ISlice
     /// <summary>
     /// Prepare for worksheet removal, dereference all tests in a slice.
     /// </summary>
-    internal void DereferenceSlice() => DereferenceTextInRange(XLSheetRange.Full);
+    internal void DereferenceSlice() => DereferenceTextInRange(Area.Full);
 
-    private void DereferenceTextInRange(XLSheetRange range)
+    private void DereferenceTextInRange(Area range)
     {
         // Dereference all texts in the range, so the ref count is kept correct.
         using var e = _values.GetEnumerator(range);

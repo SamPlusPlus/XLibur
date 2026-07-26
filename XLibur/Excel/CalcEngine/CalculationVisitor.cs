@@ -146,7 +146,7 @@ internal sealed class CalculationVisitor : IFormulaVisitor<CalcContext, AnyValue
         // updating its Range) before this formula. The returned value itself is unused.
         _ = context.GetCellValue(sheet, anchorRow, anchorColumn);
 
-        var formula = sheet.Internals.CellsCollection.FormulaSlice.Get(new XLSheetPoint(anchorRow, anchorColumn));
+        var formula = sheet.Internals.CellsCollection.FormulaSlice.Get(new Point(anchorRow, anchorColumn));
         if (formula is null || !formula.IsDynamicArray)
             return XLError.CellReference; // #REF! — the cell is not a spill anchor.
 
@@ -163,7 +163,7 @@ internal sealed class CalculationVisitor : IFormulaVisitor<CalcContext, AnyValue
     private static bool TryResolveStructuredReference(
         CalcContext context,
         StructuredReferenceNode node,
-        out XLSheetRange range,
+        out Area range,
         out XLError error)
     {
         // We don't support external links.
@@ -190,7 +190,7 @@ internal sealed class CalculationVisitor : IFormulaVisitor<CalcContext, AnyValue
             return false;
         }
 
-        range = new XLSheetRange(rowStart, colStart, rowEnd, colEnd);
+        range = new Area(rowStart, colStart, rowEnd, colEnd);
         error = default;
         return true;
     }

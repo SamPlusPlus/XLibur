@@ -91,7 +91,7 @@ internal sealed class XLCellFormula
     /// </summary>
     /// <remarks>Doesn't contain sheet, so it doesn't have to deal with
     /// sheet renames and moving formula around.</remarks>
-    internal XLSheetRange Range
+    internal Area Range
     {
         get => _extra?.Range ?? default;
         set => (_extra ??= new FormulaExtra()).Range = value;
@@ -130,7 +130,7 @@ internal sealed class XLCellFormula
     /// and as row for 2D data table. Must be present, even if input marked as deleted.
     /// This property is meaningless, if called for non-data-table formula.
     /// </summary>
-    internal XLSheetPoint Input1
+    internal Point Input1
     {
         get => _extra?.Input1 ?? default;
         init => (_extra ??= new FormulaExtra()).Input1 = value;
@@ -142,7 +142,7 @@ internal sealed class XLCellFormula
     /// Must be present for 2D, even if input marked as deleted.
     /// This property is meaningless, if called for non-data-table formula.
     /// </summary>
-    internal XLSheetPoint Input2
+    internal Point Input2
     {
         get => _extra?.Input2 ?? default;
         init => (_extra ??= new FormulaExtra()).Input2 = value;
@@ -168,12 +168,12 @@ internal sealed class XLCellFormula
     /// <summary>
     /// Get stored formula in R1C1 notation. Returned formula doesn't contain equal sign.
     /// </summary>
-    public string GetFormulaR1C1(XLSheetPoint cellAddress)
+    public string GetFormulaR1C1(Point cellAddress)
     {
         return GetFormula(A1, FormulaConversionType.A1ToR1C1, cellAddress);
     }
 
-    internal static string GetFormula(string strValue, FormulaConversionType conversionType, XLSheetPoint cellAddress)
+    internal static string GetFormula(string strValue, FormulaConversionType conversionType, Point cellAddress)
     {
         if (string.IsNullOrWhiteSpace(strValue))
             return string.Empty;
@@ -238,7 +238,7 @@ internal sealed class XLCellFormula
     /// <param name="arrayFormulaA1">Isn't wrapped in <c>{}</c> and doesn't start with <c>=</c>.</param>
     /// <param name="range">A range of cells that are calculated through the array formula.</param>
     /// <param name="aca">A flag for always calculate array.</param>
-    internal static XLCellFormula Array(string arrayFormulaA1, XLSheetRange range, bool aca)
+    internal static XLCellFormula Array(string arrayFormulaA1, Area range, bool aca)
     {
         return new XLCellFormula(arrayFormulaA1)
         {
@@ -256,8 +256,8 @@ internal sealed class XLCellFormula
     /// <param name="input1Deleted">Was the original address deleted?</param>
     /// <param name="isRowDataTable">Is data table in row (<c>true</c>) or columns (<c>false</c>)?</param>
     internal static XLCellFormula DataTable1D(
-        XLSheetRange range,
-        XLSheetPoint input1Address,
+        Area range,
+        Point input1Address,
         bool input1Deleted,
         bool isRowDataTable)
     {
@@ -295,10 +295,10 @@ internal sealed class XLCellFormula
     /// <param name="input2Address">Address of the input cell that will be replaced in the data table. If input deleted, ignored and value can be anything.</param>
     /// <param name="input2Deleted">Was the original address deleted?</param>
     internal static XLCellFormula DataTable2D(
-        XLSheetRange range,
-        XLSheetPoint input1Address,
+        Area range,
+        Point input1Address,
         bool input1Deleted,
-        XLSheetPoint input2Address,
+        Point input2Address,
         bool input2Deleted)
     {
         var colInput = input1Deleted ? "#REF!" : input1Address.ToString();
@@ -386,7 +386,7 @@ internal sealed class XLCellFormula
         MarkExplicitlyDirty();
     }
 
-    public void RenameSheet(XLSheetPoint origin, string oldSheetName, string newSheetName)
+    public void RenameSheet(Point origin, string oldSheetName, string newSheetName)
     {
         var a1 = A1;
         var res = FormulaTransformation.SafeModifyA1(a1, newSheetName, origin.Row, origin.Column, new RenameRefModVisitor
@@ -401,7 +401,7 @@ internal sealed class XLCellFormula
         }
     }
 
-    internal XLCellFormula GetMovedTo(XLSheetPoint origin, XLSheetPoint destination)
+    internal XLCellFormula GetMovedTo(Point origin, Point destination)
     {
         // I could in theory swap 1x1 array or dataTable, but not worth it in this path.
         if (Type != FormulaType.Normal)
@@ -420,8 +420,8 @@ internal sealed class XLCellFormula
     /// </summary>
     private sealed class FormulaExtra
     {
-        public XLSheetRange Range;
-        public XLSheetPoint Input1;
-        public XLSheetPoint Input2;
+        public Area Range;
+        public Point Input1;
+        public Point Input2;
     }
 }

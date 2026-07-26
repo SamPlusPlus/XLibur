@@ -8,7 +8,7 @@ namespace XLibur.Excel.Coordinates;
 /// (<c>B$4:$D$10</c>), row span (<c>4:10</c>) and col span (<c>G:H</c>).
 /// </summary>
 /// <remarks>
-/// This is an actual representation of a reference, while the <see cref="XLSheetRange"/> is for
+/// This is an actual representation of a reference, while the <see cref="Area"/> is for
 /// an absolute are of a sheet and <see cref="XLAddress"/> is only for a cell reference and
 /// <see cref="XLRangeAddress"/> only for area reference.
 /// </remarks>
@@ -26,12 +26,12 @@ internal readonly record struct XLReference
         return _reference.GetDisplayStringA1();
     }
 
-    internal XLSheetRange ToSheetRange(XLSheetPoint anchor)
+    internal Area ToSheetRange(Point anchor)
     {
         return _reference.ToSheetRange(anchor);
     }
 
-    internal XLRangeAddress ToRangeAddress(XLWorksheet? sheet, XLSheetPoint anchor)
+    internal XLRangeAddress ToRangeAddress(XLWorksheet? sheet, Point anchor)
     {
         var area = _reference.ToSheetRange(anchor);
         var firstColAbs = _reference.First.ColumnType == ReferenceAxisType.Absolute;

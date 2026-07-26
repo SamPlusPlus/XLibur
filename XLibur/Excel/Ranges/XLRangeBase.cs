@@ -44,9 +44,9 @@ internal abstract class XLRangeBase : XLStylizedBase, IXLRangeBase, IXLStylized
 
     public virtual XLWorksheet Worksheet => RangeAddress.Worksheet!;
 
-    internal XLSheetRange SheetRange => !RangeAddress.IsValid
+    internal Area SheetRange => !RangeAddress.IsValid
         ? throw new InvalidOperationException("Range address is invalid.")
-        : XLSheetRange.FromRangeAddress(RangeAddress);
+        : Area.FromRangeAddress(RangeAddress);
 
     public IXLDataValidation CreateDataValidation()
     {
@@ -86,7 +86,7 @@ internal abstract class XLRangeBase : XLStylizedBase, IXLRangeBase, IXLStylized
     {
         set
         {
-            var range = XLSheetRange.FromRangeAddress(RangeAddress);
+            var range = Area.FromRangeAddress(RangeAddress);
             if (Worksheet.MergedRanges.Any(mr => mr.Intersects(this)))
                 throw new InvalidOperationException("Can't create array function over a merged range.");
 
@@ -112,7 +112,7 @@ internal abstract class XLRangeBase : XLStylizedBase, IXLRangeBase, IXLStylized
             {
                 for (var col = range.LeftColumn; col <= range.RightColumn; ++col)
                 {
-                    valueSlice.SetShareString(new XLSheetPoint(row, col), false);
+                    valueSlice.SetShareString(new Point(row, col), false);
                 }
             }
 
@@ -180,7 +180,7 @@ internal abstract class XLRangeBase : XLStylizedBase, IXLRangeBase, IXLStylized
         return true;
     }
 
-    private static IEnumerable<XLSheetPoint> EnumeratePoints(XLSheetRange range)
+    private static IEnumerable<Point> EnumeratePoints(Area range)
     {
         var firstPoint = range.FirstPoint;
         var lastPoint = range.LastPoint;
@@ -188,7 +188,7 @@ internal abstract class XLRangeBase : XLStylizedBase, IXLRangeBase, IXLStylized
         for (var row = firstPoint.Row; row <= lastPoint.Row; row++)
         {
             for (var column = firstPoint.Column; column <= lastPoint.Column; column++)
-                yield return new XLSheetPoint(row, column);
+                yield return new Point(row, column);
         }
     }
 
@@ -390,7 +390,7 @@ internal abstract class XLRangeBase : XLStylizedBase, IXLRangeBase, IXLStylized
 
         if (clearOptions == XLClearOptions.All)
         {
-            Worksheet.Internals.CellsCollection.Clear(XLSheetRange.FromRangeAddress(RangeAddress));
+            Worksheet.Internals.CellsCollection.Clear(Area.FromRangeAddress(RangeAddress));
         }
 
         return this;
@@ -658,7 +658,7 @@ internal abstract class XLRangeBase : XLStylizedBase, IXLRangeBase, IXLStylized
             );
         }
 
-        var cell = Worksheet.Internals.CellsCollection.GetCell(new XLSheetPoint(absRow, absColumn));
+        var cell = Worksheet.Internals.CellsCollection.GetCell(new Point(absRow, absColumn));
         return cell;
     }
 
@@ -1110,7 +1110,7 @@ internal abstract class XLRangeBase : XLStylizedBase, IXLRangeBase, IXLStylized
         // Range to shift...
         var columnModifier = 0;
         var rowModifier = 0;
-        var range = XLSheetRange.FromRangeAddress(RangeAddress);
+        var range = Area.FromRangeAddress(RangeAddress);
         switch (shiftDeleteCells)
         {
             case XLShiftDeletedCells.ShiftCellsLeft:
