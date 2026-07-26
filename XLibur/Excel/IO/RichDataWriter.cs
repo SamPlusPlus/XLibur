@@ -26,11 +26,8 @@ internal static class RichDataWriter
     private const string RichValueRelContentType = "application/vnd.ms-excel.richValueRel+xml";
     private const string RichValueTypesContentType = "application/vnd.ms-excel.rdrichvaluetypes+xml";
 
-    // XML namespaces
-    private const string RvNs = "http://schemas.microsoft.com/office/spreadsheetml/2017/richdata";
-    private const string RvsNs = "http://schemas.microsoft.com/office/spreadsheetml/2017/richdata2";
+    // XML namespaces (RvrNs has no OpenXmlConst entry yet)
     private const string RvrNs = "http://schemas.microsoft.com/office/spreadsheetml/2022/richvaluerel";
-    private const string RNs = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
 
     /// <summary>
     /// Entry for a single rich value (one per cell with in-cell image).
@@ -155,12 +152,12 @@ internal static class RichDataWriter
 
         w.WriteStartDocument(true);
         w.WriteStartElement("richValueRels", RvrNs);
-        w.WriteAttributeString("xmlns", "r", null, RNs);
+        w.WriteAttributeString("xmlns", "r", null, OpenXmlConst.RelationshipsNs);
 
         foreach (var relId in imageRelIds)
         {
             w.WriteStartElement("rel", RvrNs);
-            w.WriteAttributeString("id", RNs, relId);
+            w.WriteAttributeString("id", OpenXmlConst.RelationshipsNs, relId);
             w.WriteEndElement(); // rel
         }
 
@@ -189,7 +186,7 @@ internal static class RichDataWriter
         using var w = XmlWriter.Create(stream, XmlSettings());
 
         w.WriteStartDocument(true);
-        w.WriteStartElement("rvData", RvNs);
+        w.WriteStartElement("rvData", OpenXmlConst.RichDataNs);
         w.WriteAttributeString("count", entries.Count.ToString());
 
         for (var i = 0; i < entries.Count; i++)
@@ -197,15 +194,15 @@ internal static class RichDataWriter
             var entry = entries[i];
             var relIndex = imageIndexToRelIndex[entry.ImageStoreIndex];
 
-            w.WriteStartElement("rv", RvNs);
+            w.WriteStartElement("rv", OpenXmlConst.RichDataNs);
             w.WriteAttributeString("s", "0"); // structure index 0 = _localImage
 
             // Key 0: _rvRel:LocalImageFileUri (rel index)
-            w.WriteElementString("v", RvNs, relIndex.ToString());
+            w.WriteElementString("v", OpenXmlConst.RichDataNs, relIndex.ToString());
             // Key 1: CalcOrigin
-            w.WriteElementString("v", RvNs, "5");
+            w.WriteElementString("v", OpenXmlConst.RichDataNs, "5");
             // Key 2: text (alt text)
-            w.WriteElementString("v", RvNs, entry.AltText);
+            w.WriteElementString("v", OpenXmlConst.RichDataNs, entry.AltText);
 
             w.WriteEndElement(); // rv
         }
@@ -222,26 +219,26 @@ internal static class RichDataWriter
         using var w = XmlWriter.Create(stream, XmlSettings());
 
         w.WriteStartDocument(true);
-        w.WriteStartElement("rvStructures", RvsNs);
+        w.WriteStartElement("rvStructures", OpenXmlConst.RichData2Ns);
         w.WriteAttributeString("count", "1");
 
-        w.WriteStartElement("s", RvsNs);
+        w.WriteStartElement("s", OpenXmlConst.RichData2Ns);
         w.WriteAttributeString("t", "_localImage");
 
         // Key 0: _rvRel:LocalImageFileUri
-        w.WriteStartElement("k", RvsNs);
+        w.WriteStartElement("k", OpenXmlConst.RichData2Ns);
         w.WriteAttributeString("n", "_rvRel:LocalImageFileUri");
         w.WriteAttributeString("t", "i");
         w.WriteEndElement(); // k
 
         // Key 1: CalcOrigin
-        w.WriteStartElement("k", RvsNs);
+        w.WriteStartElement("k", OpenXmlConst.RichData2Ns);
         w.WriteAttributeString("n", "CalcOrigin");
         w.WriteAttributeString("t", "i");
         w.WriteEndElement(); // k
 
         // Key 2: text (alt text)
-        w.WriteStartElement("k", RvsNs);
+        w.WriteStartElement("k", OpenXmlConst.RichData2Ns);
         w.WriteAttributeString("n", "text");
         w.WriteAttributeString("t", "s");
         w.WriteEndElement(); // k
@@ -256,28 +253,26 @@ internal static class RichDataWriter
     /// </summary>
     private static void WriteRichValueTypesXml(OpenXmlPart part)
     {
-        const string rvTypesNs = "http://schemas.microsoft.com/office/spreadsheetml/2017/richdata2";
-
         using var stream = part.GetStream(FileMode.Create, FileAccess.Write);
         using var w = XmlWriter.Create(stream, XmlSettings());
 
         w.WriteStartDocument(true);
-        w.WriteStartElement("rvTypesInfo", rvTypesNs);
+        w.WriteStartElement("rvTypesInfo", OpenXmlConst.RichData2Ns);
 
-        w.WriteStartElement("global", rvTypesNs);
+        w.WriteStartElement("global", OpenXmlConst.RichData2Ns);
 
-        w.WriteStartElement("keyFlags", rvTypesNs);
+        w.WriteStartElement("keyFlags", OpenXmlConst.RichData2Ns);
 
         // _rvRel:LocalImageFileUri key flag
-        w.WriteStartElement("key", rvTypesNs);
+        w.WriteStartElement("key", OpenXmlConst.RichData2Ns);
         w.WriteAttributeString("name", "_rvRel:LocalImageFileUri");
 
-        w.WriteStartElement("flag", rvTypesNs);
+        w.WriteStartElement("flag", OpenXmlConst.RichData2Ns);
         w.WriteAttributeString("name", "ExcludeFromFile");
         w.WriteAttributeString("value", "1");
         w.WriteEndElement(); // flag
 
-        w.WriteStartElement("flag", rvTypesNs);
+        w.WriteStartElement("flag", OpenXmlConst.RichData2Ns);
         w.WriteAttributeString("name", "ExcludeFromCalcComparison");
         w.WriteAttributeString("value", "1");
         w.WriteEndElement(); // flag

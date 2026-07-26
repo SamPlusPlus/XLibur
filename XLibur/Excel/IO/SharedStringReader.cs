@@ -52,8 +52,6 @@ internal readonly struct SharedStringEntry
 /// </summary>
 internal static class SharedStringReader
 {
-    private const string XmlNs = "http://www.w3.org/XML/1998/namespace";
-
     internal static SharedStringEntry[] Read(SharedStringTablePart part)
     {
         using var stream = part.GetStream(FileMode.Open, FileAccess.Read);
@@ -200,7 +198,7 @@ internal static class SharedStringReader
             if (leadingText is not null)
             {
                 writer.WriteStartElement("t", OpenXmlConst.Main2006SsNs);
-                writer.WriteAttributeString("space", XmlNs, "preserve");
+                writer.WriteAttributeString("space", OpenXmlConst.Xml1998Ns, "preserve");
                 writer.WriteString(leadingText);
                 writer.WriteEndElement();
             }

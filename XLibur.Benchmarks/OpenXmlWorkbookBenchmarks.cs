@@ -8,6 +8,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using SpreadsheetFonts = DocumentFormat.OpenXml.Spreadsheet.Fonts;
+using XLibur.Excel.IO;
 
 namespace XLibur.Benchmarks;
 
@@ -24,7 +25,7 @@ namespace XLibur.Benchmarks;
 public class OpenXmlWorkbookBenchmarks
 {
     private const int RowCount = 50_000;
-    private const string Ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+    private const string Ns = OpenXmlConst.Main2006SsNs;
 
     private string[] _strings = null;
     private double[] _numbers = null;

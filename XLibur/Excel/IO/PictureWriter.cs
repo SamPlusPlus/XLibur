@@ -8,6 +8,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using XLibur.Excel.ContentManagers;
 using XLibur.Excel.Drawings;
 using XLibur.Extensions;
+using static XLibur.Excel.IO.OpenXmlConst;
 using static XLibur.Excel.XLWorkbook;
 using Drawing = DocumentFormat.OpenXml.Spreadsheet.Drawing;
 using Point = System.Drawing.Point;
@@ -40,8 +41,7 @@ internal static class PictureWriter
         if (xlWorksheet.Pictures.Count > 0 && !worksheet.OfType<Drawing>().Any())
         {
             var worksheetDrawing = new Drawing { Id = worksheetPart.GetIdOfPart(worksheetPart.DrawingsPart!) };
-            worksheetDrawing.AddNamespaceDeclaration("r",
-                "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+            worksheetDrawing.AddNamespaceDeclaration("r", RelationshipsNs);
             worksheet.InsertBefore(worksheetDrawing, tableParts);
             cm.SetElement(XLWorksheetContents.Drawing, worksheet.Elements<Drawing>().First());
         }
@@ -190,9 +190,8 @@ internal static class PictureWriter
             worksheetDrawing.AddNamespaceDeclaration("a", "http://schemas.openxmlformats.org/drawingml/2006/main");
 
         if (!worksheetDrawing.NamespaceDeclarations.Any(nd =>
-                nd.Value.Equals("http://schemas.openxmlformats.org/officeDocument/2006/relationships")))
-            worksheetDrawing.AddNamespaceDeclaration("r",
-                "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+                nd.Value.Equals(RelationshipsNs)))
+            worksheetDrawing.AddNamespaceDeclaration("r", RelationshipsNs);
     }
 
     private static void AddPictureAnchor(WorksheetPart worksheetPart, IXLPicture picture, SaveContext context)
