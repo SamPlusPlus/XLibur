@@ -448,6 +448,21 @@ internal abstract class XLRangeBase : XLStylizedBase, IXLRangeBase, IXLStylized
         return Contains((XLAddress)range.RangeAddress.FirstAddress, (XLAddress)range.RangeAddress.LastAddress);
     }
 
+    public bool Contains(IXLCell cell)
+    {
+        return Contains((XLAddress)cell.Address);
+    }
+
+    public bool Contains(XLAddress first, XLAddress last)
+    {
+        return Contains(first) && Contains(last);
+    }
+
+    public bool Contains(XLAddress address)
+    {
+        return RangeAddress.Contains(in address);
+    }
+
     public bool Intersects(string rangeAddress)
     {
         ArgumentException.ThrowIfNullOrEmpty(rangeAddress);
@@ -694,17 +709,17 @@ internal abstract class XLRangeBase : XLStylizedBase, IXLRangeBase, IXLStylized
         return RangeAddress.FirstAddress.ColumnLetter;
     }
 
-    public virtual XLRange? Range(string rangeAddressStr)
-    {
-        var rangeAddress = new XLRangeAddress(Worksheet, rangeAddressStr);
-        return Range(rangeAddress);
-    }
-
     internal abstract void WorksheetRangeShiftedColumns(XLRange range, int columnsShifted);
 
     internal abstract void WorksheetRangeShiftedRows(XLRange range, int rowsShifted);
 
     public abstract XLRangeType RangeType { get; }
+
+    public virtual XLRange? Range(string rangeAddressStr)
+    {
+        var rangeAddress = new XLRangeAddress(Worksheet, rangeAddressStr);
+        return Range(rangeAddress);
+    }
 
     public XLRange Range(IXLCell firstCell, IXLCell lastCell)
     {
@@ -712,34 +727,6 @@ internal abstract class XLRangeBase : XLStylizedBase, IXLRangeBase, IXLStylized
         var newLastCellAddress = (XLAddress)lastCell.Address;
 
         return GetRange(newFirstCellAddress, newLastCellAddress);
-    }
-
-    private XLRange GetRange(XLAddress newFirstCellAddress, XLAddress newLastCellAddress)
-    {
-        if (!Worksheet.Equals(newFirstCellAddress.Worksheet))
-            throw new ArgumentException("The address refers to a different worksheet.", nameof(newFirstCellAddress));
-
-        if (!Worksheet.Equals(newLastCellAddress.Worksheet))
-            throw new ArgumentException("The address refers to a different worksheet.", nameof(newLastCellAddress));
-
-        var newRangeAddress = new XLRangeAddress(newFirstCellAddress, newLastCellAddress);
-        var xlRangeParameters = new XLRangeParameters(newRangeAddress, Style);
-        if (
-            newFirstCellAddress.RowNumber < RangeAddress.FirstAddress.RowNumber
-            || newFirstCellAddress.RowNumber > RangeAddress.LastAddress.RowNumber
-            || newLastCellAddress.RowNumber > RangeAddress.LastAddress.RowNumber
-            || newFirstCellAddress.ColumnNumber < RangeAddress.FirstAddress.ColumnNumber
-            || newFirstCellAddress.ColumnNumber > RangeAddress.LastAddress.ColumnNumber
-            || newLastCellAddress.ColumnNumber > RangeAddress.LastAddress.ColumnNumber
-        )
-        {
-            throw new ArgumentOutOfRangeException(
-                $"The cells {newFirstCellAddress} and {newLastCellAddress} are outside the range '{ToString()}'.");
-        }
-
-        return newFirstCellAddress.Worksheet != null
-            ? newFirstCellAddress.Worksheet.GetOrCreateRange(xlRangeParameters)
-            : Worksheet.GetOrCreateRange(xlRangeParameters);
     }
 
     public XLRange Range(string firstCellAddress, string lastCellAddress)
@@ -804,6 +791,34 @@ internal abstract class XLRangeBase : XLStylizedBase, IXLRangeBase, IXLStylized
             rangeAddress.LastAddress.FixedColumn);
 
         return GetRange(newFirstCellAddress, newLastCellAddress);
+    }
+
+    private XLRange GetRange(XLAddress newFirstCellAddress, XLAddress newLastCellAddress)
+    {
+        if (!Worksheet.Equals(newFirstCellAddress.Worksheet))
+            throw new ArgumentException("The address refers to a different worksheet.", nameof(newFirstCellAddress));
+
+        if (!Worksheet.Equals(newLastCellAddress.Worksheet))
+            throw new ArgumentException("The address refers to a different worksheet.", nameof(newLastCellAddress));
+
+        var newRangeAddress = new XLRangeAddress(newFirstCellAddress, newLastCellAddress);
+        var xlRangeParameters = new XLRangeParameters(newRangeAddress, Style);
+        if (
+            newFirstCellAddress.RowNumber < RangeAddress.FirstAddress.RowNumber
+            || newFirstCellAddress.RowNumber > RangeAddress.LastAddress.RowNumber
+            || newLastCellAddress.RowNumber > RangeAddress.LastAddress.RowNumber
+            || newFirstCellAddress.ColumnNumber < RangeAddress.FirstAddress.ColumnNumber
+            || newFirstCellAddress.ColumnNumber > RangeAddress.LastAddress.ColumnNumber
+            || newLastCellAddress.ColumnNumber > RangeAddress.LastAddress.ColumnNumber
+        )
+        {
+            throw new ArgumentOutOfRangeException(
+                $"The cells {newFirstCellAddress} and {newLastCellAddress} are outside the range '{ToString()}'.");
+        }
+
+        return newFirstCellAddress.Worksheet != null
+            ? newFirstCellAddress.Worksheet.GetOrCreateRange(xlRangeParameters)
+            : Worksheet.GetOrCreateRange(xlRangeParameters);
     }
 
     public virtual XLRanges Ranges(string ranges)
@@ -1040,14 +1055,14 @@ internal abstract class XLRangeBase : XLStylizedBase, IXLRangeBase, IXLStylized
         return retVal;
     }
 
-    public void InsertRowsAboveVoid(bool onlyUsedCells, int numberOfRows, bool formatFromAbove = true)
-    {
-        InsertRowsAboveInternal(onlyUsedCells, numberOfRows, formatFromAbove, nullReturn: true);
-    }
-
     public IXLRangeRows InsertRowsAbove(bool onlyUsedCells, int numberOfRows, bool formatFromAbove = true)
     {
         return InsertRowsAboveInternal(onlyUsedCells, numberOfRows, formatFromAbove, nullReturn: false)!;
+    }
+
+    public void InsertRowsAboveVoid(bool onlyUsedCells, int numberOfRows, bool formatFromAbove = true)
+    {
+        InsertRowsAboveInternal(onlyUsedCells, numberOfRows, formatFromAbove, nullReturn: true);
     }
 
     private IXLRangeRows? InsertRowsAboveInternal(bool onlyUsedCells, int numberOfRows, bool formatFromAbove,
@@ -1058,21 +1073,6 @@ internal abstract class XLRangeBase : XLStylizedBase, IXLRangeBase, IXLStylized
     {
         var mergeToDelete = Worksheet.Internals.MergedRanges.GetIntersectedRanges(RangeAddress).ToList();
         mergeToDelete.ForEach(m => Worksheet.Internals.MergedRanges.Remove(m));
-    }
-
-    public bool Contains(IXLCell cell)
-    {
-        return Contains((XLAddress)cell.Address);
-    }
-
-    public bool Contains(XLAddress first, XLAddress last)
-    {
-        return Contains(first) && Contains(last);
-    }
-
-    public bool Contains(XLAddress address)
-    {
-        return RangeAddress.Contains(in address);
     }
 
     public void Delete(XLShiftDeletedCells shiftDeleteCells)
