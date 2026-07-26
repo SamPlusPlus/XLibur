@@ -104,9 +104,6 @@ See [docs/font-architecture.md](docs/font-architecture.md) for the full design.
 XLibur documentation lives at [xlibur.github.io/XLibur](https://xlibur.github.io/XLibur/) — start with
 the [Getting Started](https://xlibur.github.io/XLibur/getting-started) guide.
 
-As the library is mostly the same as ClosedXML, the [ClosedXML documentation](https://closedxml.github.io/ClosedXML/) is still *likely* valid for this library. (at least for the short term)
-
-
 ## Usage
 
 XLibur lets you create and manipulate Excel files without Excel installed — a common use case is generating reports on a web server.
@@ -136,6 +133,8 @@ dotnet test XLibur.Tests/XLibur.Tests.csproj
 
 Published benchmark results are available at
 [jafin.github.io/XLBench](https://jafin.github.io/XLBench/charts.html):
+
+Benchmark snapshot 2026-07-20:
 
 [![XLibur benchmark results](docs/benchmark_snapshot.jpg)](https://jafin.github.io/XLBench/charts.html)
 
