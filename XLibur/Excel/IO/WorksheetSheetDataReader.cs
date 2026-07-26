@@ -469,22 +469,7 @@ internal static class WorksheetSheetDataReader
         }
         else if (formulaType == CellFormulaValues.Array && refAttr is not null)
         {
-            // Child cells of an array may have an array type but no ref (reserved for the master cell).
-            var arrayArea = XLSheetRange.Parse(refAttr);
-            var isDynamicArray = cellMetaIndex is { } cm &&
-                                 dynamicArrayCmIndexes is not null &&
-                                 dynamicArrayCmIndexes.Contains(cm);
-            if (isDynamicArray)
-            {
-                formula = XLCellFormula.DynamicArrayA1(formulaText);
-                formula.Range = arrayArea;
-                formulaSlice.SetDuringLoad(cellAddress, formula);
-            }
-            else
-            {
-                formula = XLCellFormula.Array(formulaText, arrayArea, aca);
-                formulaSlice.SetArray(arrayArea, formula);
-            }
+            formula = LoadArrayFormulaXml(formulaText, refAttr, aca, cellAddress, cellMetaIndex, dynamicArrayCmIndexes, formulaSlice);
         }
         else if (formulaType == CellFormulaValues.Shared && sharedIndex is { } si)
         {
@@ -496,6 +481,32 @@ internal static class WorksheetSheetDataReader
         }
 
         return formula;
+    }
+
+    /// <summary>
+    /// Loads a classic or dynamic array formula from a master <c>&lt;f t="array"&gt;</c> cell.
+    /// Child cells of an array may have an array type but no <c>ref</c> (reserved for the master cell);
+    /// callers only invoke this when <c>ref</c> is present.
+    /// </summary>
+    private static XLCellFormula LoadArrayFormulaXml(string formulaText, string refAttr, bool aca,
+        XLSheetPoint cellAddress, uint? cellMetaIndex, HashSet<uint>? dynamicArrayCmIndexes,
+        FormulaSlice formulaSlice)
+    {
+        var arrayArea = XLSheetRange.Parse(refAttr);
+        var isDynamicArray = cellMetaIndex is { } cm &&
+                             dynamicArrayCmIndexes is not null &&
+                             dynamicArrayCmIndexes.Contains(cm);
+        if (isDynamicArray)
+        {
+            var formula = XLCellFormula.DynamicArrayA1(formulaText);
+            formula.Range = arrayArea;
+            formulaSlice.SetDuringLoad(cellAddress, formula);
+            return formula;
+        }
+
+        var arrayFormula = XLCellFormula.Array(formulaText, arrayArea, aca);
+        formulaSlice.SetArray(arrayArea, arrayFormula);
+        return arrayFormula;
     }
 
     private static XLCellFormula LoadDataTableFormulaXml(string refAttr, string? r1Attr, string? r2Attr,
