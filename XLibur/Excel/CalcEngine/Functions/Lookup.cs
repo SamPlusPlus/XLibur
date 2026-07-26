@@ -313,6 +313,69 @@ internal static class Lookup
         }
     }
 
+    private static int Bisection(Array range, ScalarValue lookupValue)
+    {
+        // Bisection is predicated on the fact that values of the same type are sorted.
+        // If they are not, results are unpredictable.
+        // Invariants:
+        // * Low row has a value that is less or equal than lookup value
+        // * High row has a value that is greater than lookup value
+        var lowRow = 0;
+        var highRow = range.Height - 1;
+
+        lowRow = FindSameTypeRow(range, highRow, 1, lowRow, in lookupValue);
+        if (lowRow == -1)
+            return -1; // Range doesn't contain even one element of same type
+
+        // Sanity check for unsorted ranges. For bisection to work, lowRow always
+        // has to have a value that is less or equal to the lookup value.
+        var lowValue = range[lowRow, 0];
+        var lowCompare = ScalarValueComparer.SortIgnoreCase.Compare(lowValue, lookupValue);
+
+        // Ensure invariants before the main loop. If even if the lowest value in the range is greater than lookup value,
+        // then there can't be any row that matches lookup value/lower.
+        if (lowCompare > 0)
+            return -1;
+
+        // Since we already know that there is at least one element of the same type as lookup value,
+        // high row will find something, though it might be the same row as lowRow.
+        highRow = FindSameTypeRow(range, lowRow, -1, highRow, in lookupValue);
+
+        // Sanity check for unsorted ranges. For bisection to work, highRow always
+        // has to have a value that is greater than the lookup value
+        var highValue = range[highRow, 0];
+        var highCompare = ScalarValueComparer.SortIgnoreCase.Compare(highValue, lookupValue);
+
+        // Ensure invariants before the main loop. If the lookup value is greater/equal than
+        // the greatest value of the range, it is the result.
+        if (highCompare <= 0)
+            return highRow;
+
+        // Now we have two borders with actual values, and we know the lookup value is less than high and greater/equal to lower
+        while (true)
+        {
+            // The FindMiddle method returns only values [lowRow, highRow),
+            // so in each loop it decreases the interval. The lowRow value is
+            // the last one checked during search of a middle.
+            var middleRow = FindMiddle(range, lowRow, highRow, in lookupValue);
+
+            // A condition for "if an exact match is not found, the next
+            // largest value that is less than lookup-value is returned".
+            // At this time, lowRow is less than lookup value and highRow
+            // is more than lookup value.
+            if (middleRow == lowRow)
+                return lowRow;
+
+            var middleValue = range[middleRow, 0];
+            var middleCompare = ScalarValueComparer.SortIgnoreCase.Compare(middleValue, lookupValue);
+
+            if (middleCompare <= 0)
+                lowRow = middleRow;
+            else
+                highRow = middleRow;
+        }
+    }
+
     private static AnyValue Row(CalcContext ctx, Span<AnyValue> p)
     {
         if (p.Length == 0 || p[0].IsBlank)
@@ -546,69 +609,6 @@ internal static class Lookup
         }
 
         return (rowNumber, colNumber);
-    }
-
-    private static int Bisection(Array range, ScalarValue lookupValue)
-    {
-        // Bisection is predicated on the fact that values of the same type are sorted.
-        // If they are not, results are unpredictable.
-        // Invariants:
-        // * Low row has a value that is less or equal than lookup value
-        // * High row has a value that is greater than lookup value
-        var lowRow = 0;
-        var highRow = range.Height - 1;
-
-        lowRow = FindSameTypeRow(range, highRow, 1, lowRow, in lookupValue);
-        if (lowRow == -1)
-            return -1; // Range doesn't contain even one element of same type
-
-        // Sanity check for unsorted ranges. For bisection to work, lowRow always
-        // has to have a value that is less or equal to the lookup value.
-        var lowValue = range[lowRow, 0];
-        var lowCompare = ScalarValueComparer.SortIgnoreCase.Compare(lowValue, lookupValue);
-
-        // Ensure invariants before the main loop. If even if the lowest value in the range is greater than lookup value,
-        // then there can't be any row that matches lookup value/lower.
-        if (lowCompare > 0)
-            return -1;
-
-        // Since we already know that there is at least one element of the same type as lookup value,
-        // high row will find something, though it might be the same row as lowRow.
-        highRow = FindSameTypeRow(range, lowRow, -1, highRow, in lookupValue);
-
-        // Sanity check for unsorted ranges. For bisection to work, highRow always
-        // has to have a value that is greater than the lookup value
-        var highValue = range[highRow, 0];
-        var highCompare = ScalarValueComparer.SortIgnoreCase.Compare(highValue, lookupValue);
-
-        // Ensure invariants before the main loop. If the lookup value is greater/equal than
-        // the greatest value of the range, it is the result.
-        if (highCompare <= 0)
-            return highRow;
-
-        // Now we have two borders with actual values, and we know the lookup value is less than high and greater/equal to lower
-        while (true)
-        {
-            // The FindMiddle method returns only values [lowRow, highRow),
-            // so in each loop it decreases the interval. The lowRow value is
-            // the last one checked during search of a middle.
-            var middleRow = FindMiddle(range, lowRow, highRow, in lookupValue);
-
-            // A condition for "if an exact match is not found, the next
-            // largest value that is less than lookup-value is returned".
-            // At this time, lowRow is less than lookup value and highRow
-            // is more than lookup value.
-            if (middleRow == lowRow)
-                return lowRow;
-
-            var middleValue = range[middleRow, 0];
-            var middleCompare = ScalarValueComparer.SortIgnoreCase.Compare(middleValue, lookupValue);
-
-            if (middleCompare <= 0)
-                lowRow = middleRow;
-            else
-                highRow = middleRow;
-        }
     }
 
     /// <summary>
