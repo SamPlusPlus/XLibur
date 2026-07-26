@@ -444,30 +444,6 @@ public partial class XLWorkbook : IXLWorkbook
         _originalStream = null;
     }
 
-    private static SpreadsheetDocumentType GetSpreadsheetDocumentType(string filePath)
-    {
-        var extension = Path.GetExtension(filePath);
-
-        if (string.IsNullOrEmpty(extension)) throw new ArgumentException("Empty extension is not supported.");
-        extension = extension[1..].ToLowerInvariant();
-
-        return extension switch
-        {
-            "xlsm" => SpreadsheetDocumentType.MacroEnabledWorkbook,
-            "xltm" => SpreadsheetDocumentType.MacroEnabledTemplate,
-            "xlsx" => SpreadsheetDocumentType.Workbook,
-            "xltx" => SpreadsheetDocumentType.Template,
-            _ => throw new ArgumentException(
-                $"Extension '{extension}' is not supported. Supported extensions are '.xlsx', '.xlsm', '.xltx' and '.xltm'.")
-        };
-    }
-
-    private void CheckForWorksheetsPresent()
-    {
-        if (Worksheets.Count == 0)
-            throw new InvalidOperationException("Workbooks need at least one worksheet.");
-    }
-
     /// <summary>
     ///   Saves the current workbook to a stream.
     /// </summary>
@@ -535,6 +511,30 @@ public partial class XLWorkbook : IXLWorkbook
         _loadSource = XLLoadSource.Stream;
         _originalStream = stream;
         _originalFile = null;
+    }
+
+    private static SpreadsheetDocumentType GetSpreadsheetDocumentType(string filePath)
+    {
+        var extension = Path.GetExtension(filePath);
+
+        if (string.IsNullOrEmpty(extension)) throw new ArgumentException("Empty extension is not supported.");
+        extension = extension[1..].ToLowerInvariant();
+
+        return extension switch
+        {
+            "xlsm" => SpreadsheetDocumentType.MacroEnabledWorkbook,
+            "xltm" => SpreadsheetDocumentType.MacroEnabledTemplate,
+            "xlsx" => SpreadsheetDocumentType.Workbook,
+            "xltx" => SpreadsheetDocumentType.Template,
+            _ => throw new ArgumentException(
+                $"Extension '{extension}' is not supported. Supported extensions are '.xlsx', '.xlsm', '.xltx' and '.xltm'.")
+        };
+    }
+
+    private void CheckForWorksheetsPresent()
+    {
+        if (Worksheets.Count == 0)
+            throw new InvalidOperationException("Workbooks need at least one worksheet.");
     }
 
     internal static void CopyStream(Stream input, Stream output)
