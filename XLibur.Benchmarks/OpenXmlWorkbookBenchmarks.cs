@@ -286,7 +286,7 @@ public class OpenXmlWorkbookBenchmarks
 
     #region Formatted benchmark helpers
 
-    private void WriteFormattedHeaderRow(OpenXmlWriter writer, List<string> sstEntries, Dictionary<string, int> sstMap)
+    private static void WriteFormattedHeaderRow(OpenXmlWriter writer, List<string> sstEntries, Dictionary<string, int> sstMap)
     {
         var headers = new[] { "Name", "Amount", "Date", "Quantity", "Price", "Total", "Status", "Category", "Region", "Notes" };
         WriteRowStart(writer, 1);
