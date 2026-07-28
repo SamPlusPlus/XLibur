@@ -57,16 +57,14 @@ public class CopyingRowsAndColumns : IXLExample
     private static void CopyRowAsRange(IXLWorksheet originalSheet, int originalRowNumber, IXLWorksheet destSheet,
         int destRowNumber)
     {
-        {
-            var destinationRow = destSheet.Row(destRowNumber);
-            destinationRow.Clear();
+        var destinationRow = destSheet.Row(destRowNumber);
+        destinationRow.Clear();
 
-            var originalRow = originalSheet.Row(originalRowNumber);
-            var columnNumber = originalRow.LastCellUsed(XLCellsUsedOptions.All).Address.ColumnNumber;
+        var originalRow = originalSheet.Row(originalRowNumber);
+        var columnNumber = originalRow.LastCellUsed(XLCellsUsedOptions.All).Address.ColumnNumber;
 
-            var originalRange = originalSheet.Range(originalRowNumber, 1, originalRowNumber, columnNumber);
-            var destRange = destSheet.Range(destRowNumber, 1, destRowNumber, columnNumber);
-            originalRange.CopyTo(destRange);
-        }
+        var originalRange = originalSheet.Range(originalRowNumber, 1, originalRowNumber, columnNumber);
+        var destRange = destSheet.Range(destRowNumber, 1, destRowNumber, columnNumber);
+        originalRange.CopyTo(destRange);
     }
 }
