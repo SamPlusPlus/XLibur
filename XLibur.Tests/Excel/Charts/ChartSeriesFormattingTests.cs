@@ -49,7 +49,7 @@ public class ChartSeriesFormattingTests
         return ms;
     }
 
-    private static C.ChartSpace ChartSpaceOf(Stream stream)
+    private static C.ChartSpace ChartSpaceOf(MemoryStream stream)
     {
         stream.Position = 0;
         using var doc = SpreadsheetDocument.Open(stream, false);

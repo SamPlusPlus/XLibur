@@ -162,7 +162,7 @@ public class ChartRoundTripPreservationTests
         return ms;
     }
 
-    private static string ReadChartXml(Stream stream)
+    private static string ReadChartXml(MemoryStream stream)
     {
         stream.Position = 0;
         using var doc = SpreadsheetDocument.Open(stream, false);

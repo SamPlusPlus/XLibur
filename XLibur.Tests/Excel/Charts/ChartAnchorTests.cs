@@ -31,7 +31,7 @@ public class ChartAnchorTests
         return ms;
     }
 
-    private static Xdr.WorksheetDrawing DrawingOf(Stream stream)
+    private static Xdr.WorksheetDrawing DrawingOf(MemoryStream stream)
     {
         stream.Position = 0;
         using var doc = SpreadsheetDocument.Open(stream, false);
