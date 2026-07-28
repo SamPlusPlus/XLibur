@@ -9,6 +9,7 @@ using DocumentFormat.OpenXml.Experimental;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using XLibur.Excel.ContentManagers;
+using static XLibur.Excel.IO.OpenXmlConst;
 using static XLibur.Excel.XLWorkbook;
 using A = DocumentFormat.OpenXml.Drawing;
 using C = DocumentFormat.OpenXml.Drawing.Charts;
@@ -286,7 +287,7 @@ internal static class ChartWriter
         var chartSpace = new Cx.ChartSpace();
         chartSpace.AddNamespaceDeclaration("cx", "http://schemas.microsoft.com/office/drawing/2014/chartex");
         chartSpace.AddNamespaceDeclaration("a", "http://schemas.openxmlformats.org/drawingml/2006/main");
-        chartSpace.AddNamespaceDeclaration("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+        chartSpace.AddNamespaceDeclaration("r", RelationshipsNs);
         chartSpace.AppendChild(chartData);
         chartSpace.AppendChild(cxChart);
         return chartSpace;
@@ -1157,8 +1158,7 @@ internal static class ChartWriter
         {
             var tableParts = worksheet.Elements<TableParts>().FirstOrDefault();
             var drawingRef = new Drawing { Id = worksheetPart.GetIdOfPart(drawingsPart) };
-            drawingRef.AddNamespaceDeclaration("r",
-                "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+            drawingRef.AddNamespaceDeclaration("r", RelationshipsNs);
             if (tableParts != null)
                 worksheet.InsertBefore(drawingRef, tableParts);
             else
@@ -1173,9 +1173,8 @@ internal static class ChartWriter
                 nd.Value.Equals("http://schemas.openxmlformats.org/drawingml/2006/main")))
             worksheetDrawing.AddNamespaceDeclaration("a", "http://schemas.openxmlformats.org/drawingml/2006/main");
         if (!worksheetDrawing.NamespaceDeclarations.Any(nd =>
-                nd.Value.Equals("http://schemas.openxmlformats.org/officeDocument/2006/relationships")))
-            worksheetDrawing.AddNamespaceDeclaration("r",
-                "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+                nd.Value.Equals(RelationshipsNs)))
+            worksheetDrawing.AddNamespaceDeclaration("r", RelationshipsNs);
     }
 
     // ── Type classification ─────────────────────────────────────────────

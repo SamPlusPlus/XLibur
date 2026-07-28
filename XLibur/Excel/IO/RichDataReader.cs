@@ -19,9 +19,6 @@ internal static class RichDataReader
     private const string RichValueStructureRelType = "http://schemas.microsoft.com/office/2017/06/relationships/rdRichValueStructure";
     private const string RichValueRelRelType = "http://schemas.microsoft.com/office/2017/06/relationships/richValueRel";
 
-    // XML namespaces
-    private const string RNs = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
-
     /// <summary>
     /// Load rich data parts from the workbook part. If successful, populates
     /// <see cref="LoadContext.RichValueImages"/> with vm-to-CellImage mapping.
@@ -139,7 +136,7 @@ internal static class RichDataReader
             if (reader.NodeType == XmlNodeType.Element && reader.LocalName == "rel")
             {
                 // The r:id attribute is in the relationships namespace
-                var id = reader.GetAttribute("id", RNs);
+                var id = reader.GetAttribute("id", OpenXmlConst.RelationshipsNs);
                 if (id is not null)
                     relIds.Add(id);
             }

@@ -1,4 +1,5 @@
 ﻿using XLibur.Excel;
+using XLibur.Excel.IO;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -1021,7 +1022,7 @@ public class XLPivotTableTests
             CreatedVersion = 5,
             RefreshedVersion = 5,
         };
-        cacheDefinition.AddNamespaceDeclaration("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+        cacheDefinition.AddNamespaceDeclaration("r", OpenXmlConst.RelationshipsNs);
 
         var cacheSource = new CacheSource { Type = SourceValues.Worksheet };
         cacheSource.Append(new WorksheetSource { Sheet = "Data", Reference = "A1:C4" });
@@ -1288,7 +1289,7 @@ public class XLPivotTableTests
             CreatedVersion = 5,
             RefreshedVersion = 5,
         };
-        cacheDefinition.AddNamespaceDeclaration("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+        cacheDefinition.AddNamespaceDeclaration("r", OpenXmlConst.RelationshipsNs);
 
         var cacheSource = new CacheSource { Type = SourceValues.Worksheet };
         cacheSource.Append(new WorksheetSource { Sheet = "Data", Reference = "A1:B4" });

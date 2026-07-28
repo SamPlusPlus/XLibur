@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 using XLibur.Excel;
+using XLibur.Excel.IO;
 using System.Threading.Tasks;
 
 namespace XLibur.Tests.Excel.PageSetup;
@@ -271,7 +272,7 @@ public class HeaderFooterImageTests
         var sheetEntry = archive.Entries.First(e => e.FullName.Contains("worksheets/sheet"));
         using var sheetStream = sheetEntry.Open();
         var sheetXml = XDocument.Load(sheetStream);
-        var ssNs = XNamespace.Get("http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+        var ssNs = XNamespace.Get(OpenXmlConst.Main2006SsNs);
         var legacyDrawingHF = sheetXml.Root!.Element(ssNs + "legacyDrawingHF");
         await Assert.That(legacyDrawingHF).IsNotNull().Because("Sheet should contain <legacyDrawingHF> element");
     }
@@ -327,7 +328,7 @@ public class HeaderFooterImageTests
         var sheetEntry = archive.Entries.First(e => e.FullName.Contains("worksheets/sheet"));
         using var sheetStream = sheetEntry.Open();
         var sheetXml = XDocument.Load(sheetStream);
-        var ssNs = XNamespace.Get("http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+        var ssNs = XNamespace.Get(OpenXmlConst.Main2006SsNs);
         var legacyDrawingHF = sheetXml.Root!.Element(ssNs + "legacyDrawingHF");
         await Assert.That(legacyDrawingHF).IsNull().Because("Sheet should NOT contain <legacyDrawingHF> when no images");
     }
@@ -355,7 +356,7 @@ public class HeaderFooterImageTests
         var sheetEntry = archive.Entries.First(e => e.FullName.Contains("worksheets/sheet"));
         using var sheetStream = sheetEntry.Open();
         var sheetXml = XDocument.Load(sheetStream);
-        var ssNs = XNamespace.Get("http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+        var ssNs = XNamespace.Get(OpenXmlConst.Main2006SsNs);
 
         await Assert.That(sheetXml.Root!.Element(ssNs + "legacyDrawing")).IsNotNull();
         await Assert.That(sheetXml.Root!.Element(ssNs + "legacyDrawingHF")).IsNotNull();
@@ -402,7 +403,7 @@ public class HeaderFooterImageTests
         using (var sheetStream = sheetEntry.Open())
         {
             var sheetXml = XDocument.Load(sheetStream);
-            var ssNs = XNamespace.Get("http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+            var ssNs = XNamespace.Get(OpenXmlConst.Main2006SsNs);
             var hf = sheetXml.Root!.Element(ssNs + "headerFooter");
             headerText = hf?.Element(ssNs + "oddHeader")?.Value ?? "";
             footerText = hf?.Element(ssNs + "oddFooter")?.Value ?? "";

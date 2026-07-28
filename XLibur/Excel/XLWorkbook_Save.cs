@@ -608,7 +608,6 @@ public partial class XLWorkbook
             .FirstOrDefault(fm => fm.Name?.Value == "XLRICHVALUE");
         existingFm?.Remove();
 
-        const string xlrvNs = "http://schemas.microsoft.com/office/spreadsheetml/2017/richdata";
         var futureMetadata = new FutureMetadata { Name = "XLRICHVALUE", Count = (uint)entries.Count };
         for (var i = 0; i < entries.Count; i++)
         {
@@ -616,7 +615,7 @@ public partial class XLWorkbook
             var extList = new ExtensionList();
             var ext = new Extension { Uri = "{3e2802c4-a4d2-4d8b-9148-e3be6c30e623}" };
 
-            var rvb = new OpenXmlUnknownElement("xlrv", "rvb", xlrvNs);
+            var rvb = new OpenXmlUnknownElement("xlrv", "rvb", OpenXmlConst.RichDataNs);
             rvb.SetAttribute(new OpenXmlAttribute("", "i", "", i.ToString()));
             ext.Append(rvb);
             extList.Append(ext);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using XLibur.Excel.IO;
 
 namespace XLibur.Tests.Utils;
 
@@ -11,22 +12,22 @@ namespace XLibur.Tests.Utils;
 /// </summary>
 public static class StreamHelper
 {
-    private static readonly XName colTagName = XName.Get("col", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+    private static readonly XName colTagName = XName.Get("col", OpenXmlConst.Main2006SsNs);
     private static readonly XName widthAttrName = XName.Get("width");
 
     private static readonly IEnumerable<(string PartSubstring, XName NodeName)> ignoredNodes = new List<(string PartSubstring, XName NodeName)>
     {
         ("/docProps/core.xml", XName.Get("created", "http://purl.org/dc/terms/")),
         ("/docProps/core.xml", XName.Get("modified", "http://purl.org/dc/terms/")),
-        ("sheet", XName.Get("id", "http://schemas.microsoft.com/office/spreadsheetml/2009/9/main"))
+        ("sheet", XName.Get("id", OpenXmlConst.X14Main2009SsNs))
     };
 
     private static readonly IEnumerable<(string PartSubstring, XName NodeName, XName AttrName)> ignoredAttributes = new List<(string PartSubstring, XName NodeName, XName AttrName)>
     {
-        ("sheet", XName.Get("cfRule", "http://schemas.microsoft.com/office/spreadsheetml/2009/9/main"), XName.Get("id")),
+        ("sheet", XName.Get("cfRule", OpenXmlConst.X14Main2009SsNs), XName.Get("id")),
         // count and uniqueCount were removed due to streaming, but they are used by every file, for now ignore difference.
-        ("/xl/sharedStrings.xml", XName.Get("sst", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"), XName.Get("count")),
-        ("/xl/sharedStrings.xml", XName.Get("sst", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"), XName.Get("uniqueCount")),
+        ("/xl/sharedStrings.xml", XName.Get("sst", OpenXmlConst.Main2006SsNs), XName.Get("count")),
+        ("/xl/sharedStrings.xml", XName.Get("sst", OpenXmlConst.Main2006SsNs), XName.Get("uniqueCount")),
     };
 
     public static void StreamToStreamAppend(Stream streamIn, Stream streamToWrite)

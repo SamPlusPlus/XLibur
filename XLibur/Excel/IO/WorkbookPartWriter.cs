@@ -5,6 +5,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using XLibur.Extensions;
 using XLibur.Utils;
+using static XLibur.Excel.IO.OpenXmlConst;
 
 namespace XLibur.Excel.IO;
 
@@ -17,10 +18,9 @@ internal static class WorkbookPartWriter
         var workbook = workbookPart.Workbook;
         if (
             !workbook.NamespaceDeclarations.Contains(new KeyValuePair<string, string>("r",
-                "http://schemas.openxmlformats.org/officeDocument/2006/relationships")))
+                RelationshipsNs)))
         {
-            workbook.AddNamespaceDeclaration("r",
-                "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+            workbook.AddNamespaceDeclaration("r", RelationshipsNs);
         }
 
         WriteWorkbookProperties(workbook, xlWorkbook, options);

@@ -75,8 +75,7 @@ internal static class ChartReader
             var unknownEl = graphicData.ChildElements.Count > 0 ? graphicData.ChildElements[0] : null;
             if (unknownEl != null)
             {
-                var attr = unknownEl.GetAttribute("id",
-                    "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+                var attr = unknownEl.GetAttribute("id", OpenXmlConst.RelationshipsNs);
                 if (!string.IsNullOrWhiteSpace(attr.Value))
                     cxRefId = attr.Value;
             }

@@ -23,7 +23,7 @@ internal static class PivotTableCacheDefinitionPartWriter
         {
             pivotCacheDefinition = new PivotCacheDefinition { Id = "rId1" };
 
-            pivotCacheDefinition.AddNamespaceDeclaration("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+            pivotCacheDefinition.AddNamespaceDeclaration("r", OpenXmlConst.RelationshipsNs);
             pivotTableCacheDefinitionPart.PivotCacheDefinition = pivotCacheDefinition;
         }
 
