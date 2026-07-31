@@ -48,7 +48,7 @@ internal sealed class XLPictureGroupView : IXLPictureGroup, IEquatable<XLPicture
 
     public override int GetHashCode() => HashCode.Combine(_worksheet, _groupKey);
 
-    private IXLPicture AddCore(Stream stream, string? name)
+    private XLPicture AddCore(Stream stream, string? name)
     {
         var pictures = (XLPictures)_worksheet.Pictures;
         var member = ((IEnumerable<XLPicture>)pictures).FirstOrDefault(p => p.GroupInfo?.GroupKey == _groupKey)
