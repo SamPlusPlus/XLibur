@@ -145,7 +145,7 @@ internal sealed class XLConditionalFormat : XLStylizedBase, IXLConditionalFormat
     }
 
     public XLConditionalFormat(XLRange range, bool copyDefaultModify = false)
-        : this((XLWorksheet)range.Worksheet)
+        : this(range.Worksheet)
     {
         Areas = new XLAreaList(Area.FromRangeAddress(range.RangeAddress));
         CopyDefaultModify = copyDefaultModify;

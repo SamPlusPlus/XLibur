@@ -72,7 +72,7 @@ public static class ShifterCorpusDump
     private static string Row(string formula, int first, int last, int shift, bool foreignFormula)
     {
         using var wb = NewWorkbook(out var shiftedSheet, out var otherSheet);
-        var shifted = (XLRange)shiftedSheet.Range(first, 1, last, XLHelper.MaxColumnNumber);
+        var shifted = shiftedSheet.Range(first, 1, last, XLHelper.MaxColumnNumber);
         var host = foreignFormula ? otherSheet : shiftedSheet;
         return Format(formula, first, last, shift, foreignFormula,
             Invoke(() => XLCellFormulaShifter.ShiftFormulaRows(formula, host, shifted, shift)),
@@ -82,7 +82,7 @@ public static class ShifterCorpusDump
     private static string Column(string formula, int first, int last, int shift, bool foreignFormula)
     {
         using var wb = NewWorkbook(out var shiftedSheet, out var otherSheet);
-        var shifted = (XLRange)shiftedSheet.Range(1, first, XLHelper.MaxRowNumber, last);
+        var shifted = shiftedSheet.Range(1, first, XLHelper.MaxRowNumber, last);
         var host = foreignFormula ? otherSheet : shiftedSheet;
         return Format(formula, first, last, shift, foreignFormula,
             Invoke(() => XLCellFormulaShifter.ShiftFormulaColumns(formula, host, shifted, shift)),
