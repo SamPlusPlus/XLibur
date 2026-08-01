@@ -28,11 +28,11 @@
     NuGet would happily unify core upward and the report package would fail at runtime against
     internals that had since moved. Spec 13 replaces the grant with a public surface; once its task 3
     lands and the report package builds against the released core package, this becomes an open floor
-    (`0.107.0`) and the exactness goes away. Until then, exact is the honest expression of "compiled
+    (`0.200.0`) and the exactness goes away. Until then, exact is the honest expression of "compiled
     against these internals".
   -->
   <PropertyGroup>
-    <XLiburDependencyVersion Condition="'$(XLiburDependencyVersion)' == ''">[0.107.0]</XLiburDependencyVersion>
+    <XLiburDependencyVersion Condition="'$(XLiburDependencyVersion)' == ''">[0.200.0]</XLiburDependencyVersion>
   </PropertyGroup>
 
   <!--
