@@ -9,6 +9,8 @@
 
 ## Unreleased
 
+## v0.300.0 - 2026-08-02
+
 Promotes to public API the three core capabilities `XLibur.Report` previously reached through
 `InternalsVisibleTo`: `XLFunctionLibrary`, for evaluating a workbook function without a grid;
 source inspection and re-pointing on `IXLPivotCache`; and `IXLConditionalFormat.SetRanges`.
