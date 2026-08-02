@@ -85,6 +85,43 @@ public sealed class XLTemplate : IXLTemplate
         _variables[alias] = value is DataTable table ? ToRowDictionaries(table) : value;
     }
 
+    /// <inheritdoc />
+    public void AddVariable(object value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+
+        ThrowIfDisposed();
+
+        if (value is IDictionary dictionary)
+        {
+            foreach (DictionaryEntry entry in dictionary)
+            {
+                var key = entry.Key?.ToString();
+                if (!string.IsNullOrWhiteSpace(key))
+                {
+                    AddVariable(key, entry.Value);
+                }
+            }
+
+            return;
+        }
+
+        var type = value.GetType();
+
+        foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            if (property.CanRead && property.GetIndexParameters().Length == 0)
+            {
+                AddVariable(property.Name, property.GetValue(value));
+            }
+        }
+
+        foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
+        {
+            AddVariable(field.Name, field.GetValue(value));
+        }
+    }
+
     /// <summary>
     /// Binds a <see cref="DataTable"/> as a materialised list of column-keyed dictionaries.
     /// </summary>
@@ -112,43 +149,6 @@ public sealed class XLTemplate : IXLTemplate
         }
 
         return rows;
-    }
-
-    /// <inheritdoc />
-    public void AddVariable(object value)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-
-        ThrowIfDisposed();
-
-        if (value is IDictionary dictionary)
-        {
-            foreach (DictionaryEntry entry in dictionary)
-            {
-                var key = entry.Key?.ToString();
-                if (!string.IsNullOrWhiteSpace(key))
-                {
-                    AddVariable(key!, entry.Value);
-                }
-            }
-
-            return;
-        }
-
-        var type = value.GetType();
-
-        foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
-        {
-            if (property.CanRead && property.GetIndexParameters().Length == 0)
-            {
-                AddVariable(property.Name, property.GetValue(value));
-            }
-        }
-
-        foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
-        {
-            AddVariable(field.Name, field.GetValue(value));
-        }
     }
 
     /// <inheritdoc />

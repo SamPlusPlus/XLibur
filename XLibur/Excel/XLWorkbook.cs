@@ -48,6 +48,9 @@ public enum XLCellSetValueBehavior
 }
 
 // ReSharper disable once InconsistentNaming
+// S4136 wants every overload group adjacent. Members here are ordered by the lifecycle stage they belong to,
+// which is the order a reader follows; regrouping by name would break it.
+#pragma warning disable S4136
 public partial class XLWorkbook : IXLWorkbook
 {
     #region Static
@@ -553,7 +556,7 @@ public partial class XLWorkbook : IXLWorkbook
         {
             if (string.Compare(_originalFile!.Trim(), file.Trim(), StringComparison.OrdinalIgnoreCase) != 0)
             {
-                File.Copy(_originalFile!, file, true);
+                File.Copy(_originalFile, file, true);
                 File.SetAttributes(file, FileAttributes.Normal);
             }
 
@@ -564,7 +567,7 @@ public partial class XLWorkbook : IXLWorkbook
             _originalStream!.Position = 0;
 
             using var fileStream = File.Create(file);
-            CopyStream(_originalStream!, fileStream);
+            CopyStream(_originalStream, fileStream);
             CreatePackage(fileStream, false, _spreadsheetDocumentType, options);
         }
 
@@ -643,7 +646,7 @@ public partial class XLWorkbook : IXLWorkbook
         {
             _originalStream!.Position = 0;
             if (_originalStream != stream)
-                CopyStream(_originalStream!, stream);
+                CopyStream(_originalStream, stream);
 
             CreatePackage(stream, false, _spreadsheetDocumentType, options);
         }
@@ -679,7 +682,7 @@ public partial class XLWorkbook : IXLWorkbook
         else if (_loadSource == XLLoadSource.Stream)
         {
             _originalStream!.Position = 0;
-            CopyStream(_originalStream!, package);
+            CopyStream(_originalStream, package);
             CreatePackage(package, false, _spreadsheetDocumentType, options);
         }
 

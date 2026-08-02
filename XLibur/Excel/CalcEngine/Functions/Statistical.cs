@@ -8,6 +8,9 @@ using static XLibur.Excel.CalcEngine.Functions.SignatureAdapter;
 
 namespace XLibur.Excel.CalcEngine;
 
+// S4136 wants every overload group adjacent. Members here are ordered by the Excel function they implement,
+// which is the order a reader follows; regrouping by name would break it.
+#pragma warning disable S4136
 internal static class Statistical
 {
     // Argument positions that may be ranges in *IFS functions that take a leading value range:
@@ -157,9 +160,9 @@ internal static class Statistical
             var cdf = 0d;
             for (var y = 0; y <= numberSuccesses; ++y)
             {
-                var result = BinomDist(y, numberTrials, successProbability);
-                if (!result.TryPickT0(out var pf, out var error))
-                    return error;
+                var termResult = BinomDist(y, numberTrials, successProbability);
+                if (!termResult.TryPickT0(out var pf, out var termError))
+                    return termError;
 
                 cdf += pf;
             }
@@ -170,13 +173,11 @@ internal static class Statistical
             return cdf;
         }
 
-        {
-            var result = BinomDist(numberSuccesses, numberTrials, successProbability);
-            if (!result.TryPickT0(out var binomDist, out var error))
-                return error;
+        var result = BinomDist(numberSuccesses, numberTrials, successProbability);
+        if (!result.TryPickT0(out var binomDist, out var error))
+            return error;
 
-            return binomDist;
-        }
+        return binomDist;
     }
 
     private static OneOf<double, XLError> BinomDist(double x, double n, double p)
