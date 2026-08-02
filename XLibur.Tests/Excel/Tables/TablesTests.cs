@@ -20,9 +20,9 @@ public class TablesTests
 {
     public class TestObjectWithoutAttributes
     {
-        public string Column1 { get; set; }
+        public string Column1 { get; set; } = string.Empty;
 
-        public string Column2 { get; set; }
+        public string Column2 { get; set; } = string.Empty;
     }
 
     public class TestObjectWithAttributes
@@ -30,10 +30,10 @@ public class TablesTests
         public int UnOrderedColumn { get; set; }
 
         [XLColumn(Header = "SecondColumn", Order = 1)]
-        public string Column1 { get; set; }
+        public string Column1 { get; set; } = string.Empty;
 
         [XLColumn(Header = "FirstColumn", Order = 0)]
-        public string Column2 { get; set; }
+        public string Column2 { get; set; } = string.Empty;
 
         [XLColumn(Header = "SomeFieldNotProperty", Order = 2)]
         public int MyField;
@@ -356,7 +356,7 @@ public class TablesTests
 
         table.SetShowHeaderRow();
         var headerRow = table.HeadersRow();
-        await Assert.That(headerRow).IsNotEqualTo(null);
+        await Assert.That(headerRow).IsNotNull();
         await Assert.That(headerRow!.Cell(1).GetText()).IsEqualTo("Categories");
 
         table.SetShowHeaderRow(false);
@@ -367,7 +367,7 @@ public class TablesTests
 
         await Assert.That(ws.FirstCell().GetText()).IsEqualTo("x");
         await Assert.That(ws.Cell("A2").GetText()).IsEqualTo("Categories");
-        await Assert.That(headerRow).IsNotEqualTo(null);
+        await Assert.That(headerRow).IsNotNull();
         await Assert.That(table.DataRange.FirstRow()!.Field("Categories").GetText()).IsEqualTo("A");
         await Assert.That(table.DataRange.LastRow()!.Field("Categories").GetText()).IsEqualTo("C");
         await Assert.That(table.DataRange.FirstCell().GetText()).IsEqualTo("A");

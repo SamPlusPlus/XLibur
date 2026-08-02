@@ -18,7 +18,7 @@ public class DynamicFilterTests
                 {
                     "Data",
                     1,2,3,4,5,10, // avg. 4.16
-                }).SetAutoFilter();
+                })!.SetAutoFilter();
                 autoFilter.Column(1).AboveAverage();
             },
             async (_, ws) =>

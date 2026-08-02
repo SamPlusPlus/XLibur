@@ -25,7 +25,7 @@ internal class XLPivotTableAxisTests
             (1, 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         var internalPt = (XLPivotTable)pt;
         await Assert.That(internalPt.PivotFields[0].Items).IsEmpty();
 
@@ -54,11 +54,11 @@ internal class XLPivotTableAxisTests
             (1, 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         pt.RowLabels.Add("ID", "Item ID");
 
-        var ex = await Assert.That(() => pt.RowLabels.Add("ID", "Item ID")).Throws<InvalidOperationException>()!;
-        await Assert.That(ex.Message).IsEqualTo("Custom name 'Item ID' is already used.");
+        var ex = await Assert.That(() => pt.RowLabels.Add("ID", "Item ID")).Throws<InvalidOperationException>();
+        await Assert.That(ex!.Message).IsEqualTo("Custom name 'Item ID' is already used.");
     }
 
     [Test]
@@ -72,11 +72,11 @@ internal class XLPivotTableAxisTests
             (1, 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         await Assert.That(() => pt.RowLabels.Add("ID", "Item ID")).ThrowsNothing();
 
-        var ex = await Assert.That(() => pt.RowLabels.Add("nonexistent")).Throws<InvalidOperationException>()!;
-        await Assert.That(ex.Message).IsEqualTo("Field 'nonexistent' not found in pivot cache.");
+        var ex = await Assert.That(() => pt.RowLabels.Add("nonexistent")).Throws<InvalidOperationException>();
+        await Assert.That(ex!.Message).IsEqualTo("Field 'nonexistent' not found in pivot cache.");
     }
 
     #endregion
@@ -94,7 +94,7 @@ internal class XLPivotTableAxisTests
             (1, "Blue", 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         pt.RowLabels.Add("ID", "Item ID");
         pt.RowLabels.Add("Color", "Custom color");
 
@@ -126,7 +126,7 @@ internal class XLPivotTableAxisTests
             (1, "Blue", 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         var idField = pt.RowLabels.Add("ID", "Item ID");
         pt.ColumnLabels.Add("Color");
 
@@ -151,13 +151,13 @@ internal class XLPivotTableAxisTests
             (1, "Blue", 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         pt.RowLabels.Add("ID", "Item ID");
         pt.ColumnLabels.Add("Color");
 
         await Assert.That(pt.RowLabels.Get("id").SourceName).IsEqualTo("ID");
-        var ex = await Assert.That(() => pt.RowLabels.Get("color")).Throws<KeyNotFoundException>()!;
-        await Assert.That(ex.Message).IsEqualTo("Field with source name 'color' not found in AxisRow.");
+        var ex = await Assert.That(() => pt.RowLabels.Get("color")).Throws<KeyNotFoundException>();
+        await Assert.That(ex!.Message).IsEqualTo("Field with source name 'color' not found in AxisRow.");
     }
 
     #endregion
@@ -175,7 +175,7 @@ internal class XLPivotTableAxisTests
             (1, "Blue", 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         pt.RowLabels.Add("ID", "Item ID");
         pt.ColumnLabels.Add("Color");
 
@@ -199,7 +199,7 @@ internal class XLPivotTableAxisTests
             (1, "Blue", 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         var idField = pt.RowLabels.Add("ID", "Item ID");
         pt.ColumnLabels.Add("Color");
 
@@ -224,7 +224,7 @@ internal class XLPivotTableAxisTests
             (1, "Blue", 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         pt.RowLabels.Add("ID");
 
         pt.RowLabels.Remove("id");
@@ -250,7 +250,7 @@ internal class XLPivotTableAxisTests
             (1, 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         var field = pt.RowLabels.Add("ID");
 
         field.SetSubtotal(XLSubtotalFunction.Sum, true);
@@ -269,7 +269,7 @@ internal class XLPivotTableAxisTests
             (1, 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         var field = pt.RowLabels.Add("ID")
             .AddSubtotal(XLSubtotalFunction.Sum)
             .AddSubtotal(XLSubtotalFunction.Average);
@@ -291,7 +291,7 @@ internal class XLPivotTableAxisTests
             (1, 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         var field = pt.RowLabels.Add("ID");
 
         // By default, new field has Automatic subtotal
@@ -313,7 +313,7 @@ internal class XLPivotTableAxisTests
             (1, 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         var field = pt.RowLabels.Add("ID")
             .SetSubtotal(XLSubtotalFunction.Sum, true)
             .SetSubtotal(XLSubtotalFunction.Sum, true);
@@ -332,7 +332,7 @@ internal class XLPivotTableAxisTests
             (1, 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         var field = pt.RowLabels.Add("ID");
 
         // Default field has Automatic
@@ -355,7 +355,7 @@ internal class XLPivotTableAxisTests
             (1, "Blue", 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         pt.Values.Add("Count");
         var filterField = pt.ReportFilters.Add("Color");
 

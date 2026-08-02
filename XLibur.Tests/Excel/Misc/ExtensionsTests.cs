@@ -72,9 +72,9 @@ public class ExtensionsTests
     [Arguments("Slovenščina", "Slovenščina")]
     [Arguments("", "")]
     [Arguments(null, null)]
-    public async Task CanEscapeSheetName(string sheetName, string expected)
+    public async Task CanEscapeSheetName(string? sheetName, string? expected)
     {
-        await Assert.That(sheetName.EscapeSheetName()).IsEqualTo(expected);
+        await Assert.That(sheetName!.EscapeSheetName()).IsEqualTo(expected);
     }
 
     [Test]

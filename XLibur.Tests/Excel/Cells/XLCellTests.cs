@@ -48,7 +48,7 @@ public class XLCellTests
         ws.Row(3).Style.Fill.BackgroundColor = XLColor.Red;
         ws.Column(3).Style.Fill.BackgroundColor = XLColor.Red;
         ws.Cell(2, 2).Value = "ASDF";
-        var range = ws.RangeUsed(XLCellsUsedOptions.All).RangeAddress.ToString();
+        var range = ws.RangeUsed(XLCellsUsedOptions.All)!.RangeAddress.ToString();
         await Assert.That(range).IsEqualTo("B2:C3");
     }
 
@@ -59,7 +59,7 @@ public class XLCellTests
         ws.Row(2).Style.Fill.BackgroundColor = XLColor.Red;
         ws.Column(2).Style.Fill.BackgroundColor = XLColor.Red;
         ws.Cell(3, 3).Value = "ASDF";
-        var range = ws.RangeUsed(XLCellsUsedOptions.All).RangeAddress.ToString();
+        var range = ws.RangeUsed(XLCellsUsedOptions.All)!.RangeAddress.ToString();
         await Assert.That(range).IsEqualTo("B2:C3");
     }
 
@@ -79,7 +79,7 @@ public class XLCellTests
         ws.SparklineGroups.Add("B2", "C3:E3");
         ws.SparklineGroups.Add("F5", "C4:E4");
 
-        var range = ws.RangeUsed(XLCellsUsedOptions.All).RangeAddress.ToString();
+        var range = ws.RangeUsed(XLCellsUsedOptions.All)!.RangeAddress.ToString();
         await Assert.That(range).IsEqualTo("B2:F5");
     }
 
@@ -100,7 +100,7 @@ public class XLCellTests
     {
         var ws = new XLWorkbook().Worksheets.Add("Sheet1");
         var range = ws.Cell(2, 2).InsertData(InsertDataStrings);
-        await Assert.That(range.ToString()).IsEqualTo("Sheet1!B2:B4");
+        await Assert.That(range!.ToString()).IsEqualTo("Sheet1!B2:B4");
     }
 
     [Test]
@@ -108,7 +108,7 @@ public class XLCellTests
     {
         var ws = new XLWorkbook().Worksheets.Add("Sheet1");
         var range = ws.Cell(2, 2).InsertData(InsertDataStrings, false);
-        await Assert.That(range.ToString()).IsEqualTo("Sheet1!B2:B4");
+        await Assert.That(range!.ToString()).IsEqualTo("Sheet1!B2:B4");
     }
 
     [Test]
@@ -116,7 +116,7 @@ public class XLCellTests
     {
         var ws = new XLWorkbook().Worksheets.Add("Sheet1");
         var range = ws.Cell(2, 2).InsertData(InsertDataStrings, true);
-        await Assert.That(range.ToString()).IsEqualTo("Sheet1!B2:D2");
+        await Assert.That(range!.ToString()).IsEqualTo("Sheet1!B2:D2");
     }
 
     [Test]

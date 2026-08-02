@@ -23,7 +23,7 @@ public static class PackageHelper
         serializer.Serialize(stream, content);
     }
 
-    public static object ReadXmlPart(Package package, Uri uri, XmlSerializer serializer)
+    public static object? ReadXmlPart(Package package, Uri uri, XmlSerializer serializer)
     {
         if (!package.PartExists(uri))
         {
@@ -252,7 +252,7 @@ public static class PackageHelper
     /// <param name="message"></param>
     public static bool Compare(Package left, Package right, bool compareToFirstDifference, out string message)
     {
-        return Compare(left, right, compareToFirstDifference, null, out message);
+        return Compare(left, right, compareToFirstDifference, null!, out message);
     }
 
     /// <summary>

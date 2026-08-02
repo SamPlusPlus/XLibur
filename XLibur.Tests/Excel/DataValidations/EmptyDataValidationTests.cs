@@ -51,7 +51,7 @@ public class EmptyDataValidationTests
             .Ranges.Select(r => r.RangeAddress.ToString())
             .ToList();
 
-        await Assert.That(remainder).IsEquivalentTo(new[] { "A1:A1", "A4:A5" });
+        await Assert.That(remainder).IsEquivalentTo(new string?[] { "A1:A1", "A4:A5" });
     }
 
     [Test]
@@ -66,7 +66,7 @@ public class EmptyDataValidationTests
         wb.SaveAs(ms);
 
         var written = ReadSqrefs(ms);
-        await Assert.That(written).IsEquivalentTo(new[] { "A1:A5" });
+        await Assert.That(written).IsEquivalentTo(new string?[] { "A1:A5" });
     }
 
     /// <summary>
@@ -88,7 +88,7 @@ public class EmptyDataValidationTests
         wb.SaveAs(ms);
 
         var written = ReadSqrefs(ms);
-        await Assert.That(written).IsEquivalentTo(new[] { "C1:C3" });
+        await Assert.That(written).IsEquivalentTo(new string?[] { "C1:C3" });
     }
 
     /// <summary>
@@ -111,7 +111,7 @@ public class EmptyDataValidationTests
         using var doc = SpreadsheetDocument.Open(ms, false);
         var worksheet = doc.WorkbookPart!.WorksheetParts.Single().Worksheet;
 
-        await Assert.That(worksheet.Elements<DocumentFormat.OpenXml.Spreadsheet.DataValidations>().Any())
+        await Assert.That(worksheet!.Elements<DocumentFormat.OpenXml.Spreadsheet.DataValidations>().Any())
             .IsFalse();
     }
 
@@ -137,14 +137,15 @@ public class EmptyDataValidationTests
     }
 
     /// <summary>
-    /// Every <c>sqref</c> written to the sheet. Any empty entry here is the corruption this
-    /// class exists to prevent.
+    /// Every <c>sqref</c> written to the sheet. Any empty or null entry here is the corruption
+    /// this class exists to prevent, so the element type stays nullable rather than forgiving
+    /// the null and failing with a NullReferenceException instead of the assertion.
     /// </summary>
-    private static string[] ReadSqrefs(MemoryStream saved)
+    private static string?[] ReadSqrefs(MemoryStream saved)
     {
         saved.Position = 0;
         using var doc = SpreadsheetDocument.Open(saved, false);
-        var worksheet = doc.WorkbookPart!.WorksheetParts.Single().Worksheet;
+        var worksheet = doc.WorkbookPart!.WorksheetParts.Single().Worksheet!;
 
         return worksheet
             .Elements<DocumentFormat.OpenXml.Spreadsheet.DataValidations>()

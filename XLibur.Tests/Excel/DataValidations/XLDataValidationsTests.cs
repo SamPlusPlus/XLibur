@@ -10,7 +10,7 @@ public class XLDataValidationsTests
     [Test]
     public async Task CannotCreateWithoutWorksheet()
     {
-        await Assert.That(() => new XLDataValidations(null)).Throws<ArgumentNullException>();
+        await Assert.That(() => new XLDataValidations(null!)).Throws<ArgumentNullException>();
     }
 
     [Test]
@@ -127,7 +127,7 @@ public class XLDataValidationsTests
         var dv2 = ws.Range("B1:B3").CreateDataValidation();
         dv2.MinValue = "100";
 
-        (ws.DataValidations as XLDataValidations).Consolidate();
+        (ws.DataValidations as XLDataValidations)!.Consolidate();
         dv1.AddRange(ws.Range("C1:C3"));
         dv2.AddRange(ws.Range("D1:D3"));
 

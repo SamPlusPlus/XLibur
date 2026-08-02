@@ -18,7 +18,7 @@ public class Top10FilterTests
                 {
                     "Data",
                     4, 4, 1, 3, 2, 5,
-                }).SetAutoFilter();
+                })!.SetAutoFilter();
                 autoFilter.Column(1).Top(3);
             },
             async (_, ws) =>
@@ -140,7 +140,7 @@ public class Top10FilterTests
                 filterColumn.Top(value);
             else
                 filterColumn.Bottom(value);
-        }).Throws<ArgumentOutOfRangeException>()!;
-        await Assert.That(ex.Message).Contains("Value must be between 1 and 500.");
+        }).Throws<ArgumentOutOfRangeException>();
+        await Assert.That(ex!.Message).Contains("Value must be between 1 and 500.");
     }
 }

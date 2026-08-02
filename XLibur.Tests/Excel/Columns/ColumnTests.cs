@@ -18,7 +18,7 @@ public class ColumnTests
         var fromColumn = ws.Column(1).ColumnUsed();
         await Assert.That(fromColumn.RangeAddress.ToStringRelative()).IsEqualTo("A2:A3");
 
-        var fromRange = ws.Range("A1:A5").FirstColumn().ColumnUsed();
+        var fromRange = ws.Range("A1:A5").FirstColumn()!.ColumnUsed();
         await Assert.That(fromRange.RangeAddress.ToStringRelative()).IsEqualTo("A2:A3");
     }
 
@@ -236,7 +236,7 @@ public class ColumnTests
         ws.Cell("A1").Value = "A1";
         ws.Cell("B1").Value = "B1";
         ws.Cell("A2").Value = "A2";
-        var lastCoUsed = ws.LastColumnUsed().ColumnNumber();
+        var lastCoUsed = ws.LastColumnUsed()!.ColumnNumber();
         await Assert.That(lastCoUsed).IsEqualTo(2);
     }
 
@@ -245,7 +245,7 @@ public class ColumnTests
     {
         var ws = new XLWorkbook().AddWorksheet("Sheet1") as XLWorksheet;
 
-        var column = new XLColumn(ws, -1);
+        var column = new XLColumn(ws!, -1);
 
         await Assert.That(column.RangeAddress.IsValid).IsFalse();
     }

@@ -16,7 +16,7 @@ public class RangeIndexTest
     public async Task FindExistingMatches()
     {
         using var wb = new XLWorkbook();
-        var ws = wb.Worksheets.Add("Sheet1") as XLWorksheet;
+        var ws = (XLWorksheet)wb.Worksheets.Add("Sheet1");
         var index = FillIndexWithTestData(ws);
 
         for (var i = 1; i <= TestCount; i++)
@@ -33,7 +33,7 @@ public class RangeIndexTest
     public async Task FindNonExistingMatches()
     {
         using var wb = new XLWorkbook();
-        var ws = wb.Worksheets.Add("Sheet1") as XLWorksheet;
+        var ws = (XLWorksheet)wb.Worksheets.Add("Sheet1");
         var index = FillIndexWithTestData(ws);
 
         for (var i = 1; i <= TestCount; i++)
@@ -47,7 +47,7 @@ public class RangeIndexTest
     public async Task FindExistingIntersections()
     {
         using var wb = new XLWorkbook();
-        var ws = wb.Worksheets.Add("Sheet1") as XLWorksheet;
+        var ws = (XLWorksheet)wb.Worksheets.Add("Sheet1");
         var index = FillIndexWithTestData(ws);
 
         for (var i = 1; i <= TestCount; i++)
@@ -70,7 +70,7 @@ public class RangeIndexTest
     public async Task FindNonExistingIntersections()
     {
         using var wb = new XLWorkbook();
-        var ws = wb.Worksheets.Add("Sheet1") as XLWorksheet;
+        var ws = (XLWorksheet)wb.Worksheets.Add("Sheet1");
         var index = FillIndexWithTestData(ws);
 
         for (var i = 1; i <= TestCount; i++)
@@ -92,7 +92,7 @@ public class RangeIndexTest
     public async Task FindMatchAfterColumnShifting()
     {
         using var wb = new XLWorkbook();
-        var ws = wb.Worksheets.Add("Sheet1") as XLWorksheet;
+        var ws = (XLWorksheet)wb.Worksheets.Add("Sheet1");
         var index = FillIndexWithTestData(ws);
 
         ws.Column(1).InsertColumnsBefore(1000);
@@ -106,7 +106,7 @@ public class RangeIndexTest
     public async Task FindIntersectionsAfterColumnShifting()
     {
         using var wb = new XLWorkbook();
-        var ws = wb.Worksheets.Add("Sheet1") as XLWorksheet;
+        var ws = (XLWorksheet)wb.Worksheets.Add("Sheet1");
         var index = FillIndexWithTestData(ws);
 
         ws.Column(3).InsertColumnsBefore(2);
@@ -120,7 +120,7 @@ public class RangeIndexTest
     public async Task FindMatchAfterRowShifting()
     {
         using var wb = new XLWorkbook();
-        var ws = wb.Worksheets.Add("Sheet1") as XLWorksheet;
+        var ws = (XLWorksheet)wb.Worksheets.Add("Sheet1");
         var index = FillIndexWithTestData(ws);
 
         ws.Row(10).InsertRowsBelow(3);
@@ -134,7 +134,7 @@ public class RangeIndexTest
     public async Task FindIntersectionsAfterRowShifting()
     {
         using var wb = new XLWorkbook();
-        var ws = wb.Worksheets.Add("Sheet1") as XLWorksheet;
+        var ws = (XLWorksheet)wb.Worksheets.Add("Sheet1");
         var index = FillIndexWithTestData(ws);
 
         ws.Row(10).InsertRowsBelow(3);
@@ -148,11 +148,11 @@ public class RangeIndexTest
     public async Task CreateQuadTree()
     {
         using var wb = new XLWorkbook();
-        var ws = wb.Worksheets.Add("Sheet1") as XLWorksheet;
+        var ws = (XLWorksheet)wb.Worksheets.Add("Sheet1");
         var quadTree = new Quadrant();
         var range = ws.Range("BT76:CA87");
 
-        quadTree.Add(range);
+        quadTree.Add(range!);
 
         var level0 = quadTree;
         await Assert.That(level0.MinimumColumn).IsEqualTo(1);
@@ -160,7 +160,7 @@ public class RangeIndexTest
         await Assert.That(level0.MinimumRow).IsEqualTo(1);
         await Assert.That(level0.MaximumRow).IsEqualTo(XLHelper.MaxRowNumber);
         await Assert.That(level0.Ranges).IsNull();
-        await Assert.That(level0.Children.Count).IsEqualTo(128);
+        await Assert.That(level0.Children!.Count).IsEqualTo(128);
         await Assert.That(level0.Children.All(child => child.Level == 1)).IsTrue();
         await Assert.That(level0.Children.Count(child =>
             child.MinimumColumn == 1 &&
@@ -179,25 +179,25 @@ public class RangeIndexTest
             child.MaximumRow == 24576 &&
             child.Y == 2)).IsEqualTo(2);
 
-        await Assert.That(level0.Children[0].Children.Any()).IsTrue();
+        await Assert.That(level0.Children[0].Children!.Any()).IsTrue();
         await Assert.That(level0.Children.Skip(1).All(child => child.Children == null)).IsTrue();
 
         var level8 = level0
             .Children[0] // 1
-            .Children[0] // 2
-            .Children[0] // 3
-            .Children[0] // 4
-            .Children[0] // 5
-            .Children[0] // 6
-            .Children[0] // 7
-            .Children[^1]; // 8
+            .Children![0] // 2
+            .Children![0] // 3
+            .Children![0] // 4
+            .Children![0] // 5
+            .Children![0] // 6
+            .Children![0] // 7
+            .Children![^1]; // 8
 
         await Assert.That(level8.MinimumColumn).IsEqualTo(65);
         await Assert.That(level8.MinimumRow).IsEqualTo(65);
         await Assert.That(level8.MaximumColumn).IsEqualTo(128);
         await Assert.That(level8.MaximumRow).IsEqualTo(128);
 
-        var level9 = level8.Children[0];
+        var level9 = level8.Children![0];
         await Assert.That(level9.Ranges).IsNotNull();
         await Assert.That(level9.Ranges.Single()).IsEqualTo(range);
     }
@@ -206,10 +206,10 @@ public class RangeIndexTest
     public async Task XLRangesCountChangesCorrectly()
     {
         using var wb = new XLWorkbook();
-        var ws = wb.Worksheets.Add("Sheet1") as XLWorksheet;
-        var range1 = ws.Range("A1:B2");
-        var range2 = ws.Range("A2:B3");
-        var range3 = ws.Range("A1:B2"); // same as range1
+        var ws = (XLWorksheet)wb.Worksheets.Add("Sheet1");
+        var range1 = ws.Range("A1:B2")!;
+        var range2 = ws.Range("A2:B3")!;
+        var range3 = ws.Range("A1:B2")!; // same as range1
 
         var ranges = new XLRanges { range1 };
         await Assert.That(ranges.Count).IsEqualTo(1);
@@ -245,7 +245,7 @@ public class RangeIndexTest
     public async Task AddingAndRemovingOneRangeAtATimeNeverBuildsQuadTree()
     {
         using var wb = new XLWorkbook();
-        var ws = wb.Worksheets.Add("Sheet1") as XLWorksheet;
+        var ws = (XLWorksheet)wb.Worksheets.Add("Sheet1");
         var index = CreateRangeIndex(ws);
 
         // A collection that never holds more than one range has nothing to gain from a QuadTree.
@@ -267,7 +267,7 @@ public class RangeIndexTest
     public async Task QuadTreeRemainsConsistentAcrossRemoveAndReAdd()
     {
         using var wb = new XLWorkbook();
-        var ws = wb.Worksheets.Add("Sheet1") as XLWorksheet;
+        var ws = (XLWorksheet)wb.Worksheets.Add("Sheet1");
         var index = FillIndexWithTestData(ws);
 
         await Assert.That(index.IsIndexed).IsTrue();
@@ -297,7 +297,7 @@ public class RangeIndexTest
     public async Task QuadTreeRemoveAllKeepsNonMatchingRangesFindable()
     {
         using var wb = new XLWorkbook();
-        var ws = wb.Worksheets.Add("Sheet1") as XLWorksheet;
+        var ws = (XLWorksheet)wb.Worksheets.Add("Sheet1");
         var index = FillIndexWithTestData(ws);
 
         var removed = index.RemoveAll(r => r.RangeAddress.FirstAddress.RowNumber % 4 == 0);
@@ -316,7 +316,7 @@ public class RangeIndexTest
     public async Task QuadTreeRemoveByAddressAllowsReAddingSameAddress()
     {
         using var wb = new XLWorkbook();
-        var ws = wb.Worksheets.Add("Sheet1") as XLWorksheet;
+        var ws = (XLWorksheet)wb.Worksheets.Add("Sheet1");
         var index = FillIndexWithTestData(ws);
         var address = new XLAddress(ws, 200, 3, false, false);
 

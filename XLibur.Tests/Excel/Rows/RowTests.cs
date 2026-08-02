@@ -239,7 +239,7 @@ public class RowTests
         var fromRow = ws.Row(1).RowUsed();
         await Assert.That(fromRow.RangeAddress.ToStringRelative()).IsEqualTo("B1:C1");
 
-        var fromRange = ws.Range("A1:E1").FirstRow().RowUsed();
+        var fromRange = ws.Range("A1:E1").FirstRow()!.RowUsed();
         await Assert.That(fromRange.RangeAddress.ToStringRelative()).IsEqualTo("B1:C1");
     }
 
@@ -287,7 +287,7 @@ public class RowTests
     {
         var ws = new XLWorkbook().AddWorksheet("Sheet1") as XLWorksheet;
 
-        var row = new XLRow(ws, -1);
+        var row = new XLRow(ws!, -1);
 
         await Assert.That(row.RangeAddress.IsValid).IsFalse();
     }
@@ -363,9 +363,9 @@ public class RowTests
         await Assert.That(loadedWs.Internals.RowsCollection).IsEmpty();
 
         // But cell data should still be accessible
-        await Assert.That(loadedWs.Cell("A1").GetString()).IsEqualTo("Hello");
-        await Assert.That(loadedWs.Cell("A2").GetString()).IsEqualTo("World");
-        await Assert.That(loadedWs.Cell("A3").GetValue<int>()).IsEqualTo(42);
+        await Assert.That(loadedWs.Cell("A1")!.GetString()).IsEqualTo("Hello");
+        await Assert.That(loadedWs.Cell("A2")!.GetString()).IsEqualTo("World");
+        await Assert.That(loadedWs.Cell("A3")!.GetValue<int>()).IsEqualTo(42);
     }
 
     [Test]
@@ -391,9 +391,9 @@ public class RowTests
         await Assert.That(loadedWs.Internals.RowsCollection[2].Height).IsEqualTo(30).Within(XLHelper.Epsilon);
 
         // All cell data should still be accessible
-        await Assert.That(loadedWs.Cell("A1").GetString()).IsEqualTo("Normal row");
-        await Assert.That(loadedWs.Cell("A2").GetString()).IsEqualTo("Custom height row");
-        await Assert.That(loadedWs.Cell("A3").GetString()).IsEqualTo("Normal row");
+        await Assert.That(loadedWs.Cell("A1")!.GetString()).IsEqualTo("Normal row");
+        await Assert.That(loadedWs.Cell("A2")!.GetString()).IsEqualTo("Custom height row");
+        await Assert.That(loadedWs.Cell("A3")!.GetString()).IsEqualTo("Normal row");
     }
 
     [Test]

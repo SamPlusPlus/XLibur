@@ -6,7 +6,7 @@ namespace XLibur.Tests.Excel.Ranges;
 
 public class UsedAndUnusedCellsTests
 {
-    private XLWorkbook workbook;
+    private XLWorkbook workbook = null!;
 
     [Before(HookType.Test)]
     public void SetupWorkbook()
@@ -45,7 +45,7 @@ public class UsedAndUnusedCellsTests
 
         i = 0;
         row = workbook.Worksheets.First().LastRowUsed(XLCellsUsedOptions.All);
-        await Assert.That(row.RowNumber()).IsEqualTo(6);
+        await Assert.That(row!.RowNumber()).IsEqualTo(6);
         foreach (var cell in row.Cells())
         {
             i++;
@@ -54,7 +54,7 @@ public class UsedAndUnusedCellsTests
 
         i = 0;
         row = workbook.Worksheets.First().LastRowUsed(XLCellsUsedOptions.All);
-        await Assert.That(row.RowNumber()).IsEqualTo(6);
+        await Assert.That(row!.RowNumber()).IsEqualTo(6);
         foreach (var cell in row.CellsUsed())
         {
             i++;
@@ -71,7 +71,7 @@ public class UsedAndUnusedCellsTests
 
         ws.Range("B3:F6").SetValue(100);
 
-        await Assert.That(ws.FirstRowUsed(XLCellsUsedOptions.AllContents).RowNumber()).IsEqualTo(3);
+        await Assert.That(ws.FirstRowUsed(XLCellsUsedOptions.AllContents)!.RowNumber()).IsEqualTo(3);
     }
 
     [Test]
@@ -198,7 +198,7 @@ public class UsedAndUnusedCellsTests
         sheet.Range("C1:E1").Value = "row1";
         sheet.Range("A2:E2").Value = "row2";
 
-        var used = sheet.RangeUsed().RangeAddress.ToString(XLReferenceStyle.A1);
+        var used = sheet.RangeUsed()!.RangeAddress.ToString(XLReferenceStyle.A1);
 
         await Assert.That(used).IsEqualTo("A1:E2");
     }
@@ -228,7 +228,7 @@ public class UsedAndUnusedCellsTests
         var options = includeFormatting
             ? XLCellsUsedOptions.All
             : XLCellsUsedOptions.AllContents | XLCellsUsedOptions.MergedRanges;
-        var actual = ws.RangeUsed(options).RangeAddress;
+        var actual = ws.RangeUsed(options)!.RangeAddress;
 
         await Assert.That(actual.ToString()).IsEqualTo(expectedRange);
     }
@@ -248,7 +248,7 @@ public class UsedAndUnusedCellsTests
         var actual = ws.LastCellUsed(XLCellsUsedOptions.All,
             c => c.Style.Fill.BackgroundColor == XLColor.Yellow);
 
-        await Assert.That(actual.Address.ToString()).IsEqualTo("C2");
+        await Assert.That(actual!.Address.ToString()).IsEqualTo("C2");
     }
 
     [Test]
@@ -266,7 +266,7 @@ public class UsedAndUnusedCellsTests
         var actual = ws.FirstCellUsed(XLCellsUsedOptions.All,
             c => c.Style.Fill.BackgroundColor == XLColor.Yellow);
 
-        await Assert.That(actual.Address.ToString()).IsEqualTo("A2");
+        await Assert.That(actual!.Address.ToString()).IsEqualTo("A2");
     }
 
     [Test]
@@ -308,7 +308,7 @@ public class UsedAndUnusedCellsTests
         var firstCell = ws.FirstCellUsed(XLCellsUsedOptions.All);
 
         await Assert.That(((XLWorksheet)ws).Internals.CellsCollection.GetCells().Count()).IsEqualTo(0);
-        await Assert.That(firstCell.Address.ToString()).IsEqualTo("A1");
+        await Assert.That(firstCell!.Address.ToString()).IsEqualTo("A1");
     }
 
     [Test]
@@ -321,7 +321,7 @@ public class UsedAndUnusedCellsTests
         var lastCell = ws.LastCellUsed(XLCellsUsedOptions.All);
 
         await Assert.That(((XLWorksheet)ws).Internals.CellsCollection.GetCells().Count()).IsEqualTo(0);
-        await Assert.That(lastCell.Address.ToString()).IsEqualTo(XLHelper.LastCell);
+        await Assert.That(lastCell!.Address.ToString()).IsEqualTo(XLHelper.LastCell);
     }
 
     [Test]
@@ -334,7 +334,7 @@ public class UsedAndUnusedCellsTests
         var firstCell = ws.FirstCellUsed(XLCellsUsedOptions.All);
 
         await Assert.That(((XLWorksheet)ws).Internals.CellsCollection.GetCells().Count()).IsEqualTo(0);
-        await Assert.That(firstCell.Address.ToString()).IsEqualTo("A1");
+        await Assert.That(firstCell!.Address.ToString()).IsEqualTo("A1");
     }
 
     [Test]
@@ -347,7 +347,7 @@ public class UsedAndUnusedCellsTests
         var lastCell = ws.LastCellUsed(XLCellsUsedOptions.All);
 
         await Assert.That(((XLWorksheet)ws).Internals.CellsCollection.GetCells().Count()).IsEqualTo(0);
-        await Assert.That(lastCell.Address.ToString()).IsEqualTo(XLHelper.LastCell);
+        await Assert.That(lastCell!.Address.ToString()).IsEqualTo(XLHelper.LastCell);
     }
 
     [Test]
@@ -360,7 +360,7 @@ public class UsedAndUnusedCellsTests
         var firstCell = ws.FirstCellUsed(XLCellsUsedOptions.All);
 
         await Assert.That(((XLWorksheet)ws).Internals.CellsCollection.GetCells().Count()).IsEqualTo(0);
-        await Assert.That(firstCell.Address.ToString()).IsEqualTo("A1");
+        await Assert.That(firstCell!.Address.ToString()).IsEqualTo("A1");
     }
 
     [Test]
@@ -373,6 +373,6 @@ public class UsedAndUnusedCellsTests
         var lastCell = ws.LastCellUsed(XLCellsUsedOptions.All);
 
         await Assert.That(((XLWorksheet)ws).Internals.CellsCollection.GetCells().Count()).IsEqualTo(0);
-        await Assert.That(lastCell.Address.ToString()).IsEqualTo(XLHelper.LastCell);
+        await Assert.That(lastCell!.Address.ToString()).IsEqualTo(XLHelper.LastCell);
     }
 }

@@ -71,7 +71,7 @@ public class XLCellValueTests
     [Test]
     public async Task NullString_IsConvertedToBlank()
     {
-        XLCellValue value = (string)null;
+        XLCellValue value = (string?)null;
         await Assert.That(value.IsBlank).IsTrue();
         await Assert.That(value.IsText).IsFalse();
     }
@@ -603,7 +603,7 @@ public class XLCellValueTests
     public async Task TimeSpan_throws_when_not_representable(double serialDateTime)
     {
         var value = XLCellValue.FromSerialTimeSpan(serialDateTime);
-        var ex = await Assert.That(() => value.GetTimeSpan()).Throws<OverflowException>()!;
-        await Assert.That(ex.Message).IsEqualTo("The serial date time value is too large to be represented in a TimeSpan.");
+        var ex = await Assert.That(() => value.GetTimeSpan()).Throws<OverflowException>();
+        await Assert.That(ex!.Message).IsEqualTo("The serial date time value is too large to be represented in a TimeSpan.");
     }
 }

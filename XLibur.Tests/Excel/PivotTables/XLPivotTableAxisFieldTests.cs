@@ -18,7 +18,7 @@ internal class XLPivotTableAxisFieldTests
             ("ID", "Color", "Count"),
             (1, "Blue", 10),
         });
-        var pt = ws.PivotTables.Add("pt", ws.Cell("E1"), range);
+        var pt = ws.PivotTables.Add("pt", ws.Cell("E1"), range!);
         var colorField = pt.RowLabels.Add("Color");
 
         colorField.SetCustomName("Changed color");
@@ -36,13 +36,13 @@ internal class XLPivotTableAxisFieldTests
             ("ID", "Color", "Count"),
             (1, "Blue", 10),
         });
-        var pt = ws.PivotTables.Add("pt", ws.Cell("E1"), range);
+        var pt = ws.PivotTables.Add("pt", ws.Cell("E1"), range!);
         var idField = pt.RowLabels.Add("ID", "Custom ID");
         var colorField = pt.RowLabels.Add("Color");
 
-        var ex1 = await Assert.That(() => idField.SetCustomName("Color")).Throws<ArgumentException>()!;
-        await Assert.That(ex1.Message).IsEqualTo("Custom name 'Color' is already used by another field.");
+        var ex1 = await Assert.That(() => idField.SetCustomName("Color")).Throws<ArgumentException>();
+        await Assert.That(ex1!.Message).IsEqualTo("Custom name 'Color' is already used by another field.");
         var ex2 = await Assert.That(() => colorField.SetCustomName("Custom ID")).Throws<ArgumentException>();
-        await Assert.That(ex2.Message).IsEqualTo("Custom name 'Custom ID' is already used by another field.");
+        await Assert.That(ex2!.Message).IsEqualTo("Custom name 'Custom ID' is already used by another field.");
     }
 }

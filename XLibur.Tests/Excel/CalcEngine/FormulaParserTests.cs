@@ -431,8 +431,8 @@ public class FormulaParserTests
     public async Task Const_array_must_have_same_number_of_columns()
     {
         var calcEngine = new XLCalcEngine(CultureInfo.InvariantCulture);
-        var ex = await Assert.That(() => calcEngine.Parse("{1;2,3}")).Throws<ExpressionParseException>()!;
-        await Assert.That(ex.Message).Contains("Rows of an array don't have same size.");
+        var ex = await Assert.That(() => calcEngine.Parse("{1;2,3}")).Throws<ExpressionParseException>();
+        await Assert.That(ex!.Message).Contains("Rows of an array don't have same size.");
     }
 
     [Test]
@@ -440,8 +440,8 @@ public class FormulaParserTests
     {
         // XLParser allows @ for number through 'PrefixOp + Number'
         var calcEngine = new XLCalcEngine(CultureInfo.InvariantCulture);
-        var ex = await Assert.That(() => calcEngine.Parse("{@1}")).Throws<ExpressionParseException>()!;
-        await Assert.That(ex.Message).Contains("Unexpected token INTERSECT.");
+        var ex = await Assert.That(() => calcEngine.Parse("{@1}")).Throws<ExpressionParseException>();
+        await Assert.That(ex!.Message).Contains("Unexpected token INTERSECT.");
     }
 
     [Test]

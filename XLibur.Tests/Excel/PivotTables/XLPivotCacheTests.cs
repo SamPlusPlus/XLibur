@@ -22,7 +22,7 @@ public class XLPivotCacheTests
         var ws = wb.AddWorksheet();
         var range = ws.FirstCell().InsertData(PivotCacheFieldNamePie);
 
-        var pivotCache = wb.PivotCaches.Add(range);
+        var pivotCache = wb.PivotCaches.Add(range!);
         ws.Cell("A1").Value = "Pastry";
 
         await Assert.That(pivotCache.FieldNames).IsEquivalentTo(PivotCacheFieldNameOnly, CollectionOrdering.Matching);
@@ -35,7 +35,7 @@ public class XLPivotCacheTests
         var ws = wb.AddWorksheet();
         var range = ws.FirstCell().InsertData(PivotCacheFieldNamePie);
 
-        var pivotCache = wb.PivotCaches.Add(range);
+        var pivotCache = wb.PivotCaches.Add(range!);
         ws.Cell("A1").Value = "Pastry";
         pivotCache.Refresh();
 
@@ -49,7 +49,7 @@ public class XLPivotCacheTests
         var ws = wb.AddWorksheet();
         var range = ws.FirstCell().InsertData(PivotCacheFieldNamePie);
 
-        var pivotCache = wb.PivotCaches.Add(range);
+        var pivotCache = wb.PivotCaches.Add(range!);
 
         pivotCache.ItemsToRetainPerField = XLItemsToRetain.None;
         pivotCache.SaveSourceData = false;
@@ -116,11 +116,11 @@ public class XLPivotCacheTests
         });
 
         var pivots = wb.AddWorksheet("Pivots");
-        var byPastry = pivots.PivotTables.Add("byPastry", pivots.Cell("A1"), pastries);
+        var byPastry = pivots.PivotTables.Add("byPastry", pivots.Cell("A1"), pastries!);
         byPastry.RowLabels.Add("Pastry");
         byPastry.Values.Add("Sold");
 
-        var byDough = pivots.PivotTables.Add("byDough", pivots.Cell("F1"), doughs);
+        var byDough = pivots.PivotTables.Add("byDough", pivots.Cell("F1"), doughs!);
         byDough.RowLabels.Add("Dough");
         byDough.Values.Add("Batches");
 
@@ -146,7 +146,7 @@ public class XLPivotCacheTests
         saved.Position = 0;
         using var doc = SpreadsheetDocument.Open(saved, false);
 
-        var declared = doc.WorkbookPart!.Workbook.PivotCaches!
+        var declared = doc.WorkbookPart!.Workbook!.PivotCaches!
             .Elements<PivotCache>()
             .Select(cache => cache.CacheId!.Value)
             .ToList();
@@ -179,7 +179,7 @@ public class XLPivotCacheTests
                 ("Waffles", "Puff")
             });
 
-            var table = range.CreateTable();
+            var table = range!.CreateTable();
 
             var pivotTable = ws.PivotTables.Add("pvt", ws.Cell("D1"), table);
             pivotTable.RowLabels.Add("Pastry");

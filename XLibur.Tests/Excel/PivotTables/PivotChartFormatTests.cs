@@ -97,7 +97,7 @@ public class PivotChartFormatTests
         });
 
         var pivots = wb.AddWorksheet("Pivots");
-        var pt = pivots.PivotTables.Add("pvt", pivots.Cell("A1"), range);
+        var pt = pivots.PivotTables.Add("pvt", pivots.Cell("A1"), range!);
         pt.RowLabels.Add("Pastry");
         pt.Values.Add("Sold");
 
@@ -111,7 +111,7 @@ public class PivotChartFormatTests
             .Single()
             .PivotTableDefinition;
 
-        await Assert.That(definition.Elements<ChartFormats>().Any()).IsFalse();
+        await Assert.That(definition!.Elements<ChartFormats>().Any()).IsFalse();
     }
 
     private static System.Collections.Generic.List<ChartFormat> ReadChartFormats(MemoryStream saved)
@@ -123,7 +123,7 @@ public class PivotChartFormatTests
             .Single()
             .PivotTableDefinition;
 
-        return definition.Elements<ChartFormats>()
+        return definition!.Elements<ChartFormats>()
             .SelectMany(cf => cf.Elements<ChartFormat>())
             .ToList();
     }

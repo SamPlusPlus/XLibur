@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using XLibur.Excel;
@@ -85,7 +86,7 @@ public class XLRangeBaseTests
         ws.Cell(1, 1).Value = "Hello World!";
         wb.DefinedNames.Add("SingleCell", "Sheet1!$A$1");
         var range = wb.Range("SingleCell");
-        await Assert.That(range.CellsUsed().Count()).IsEqualTo(1);
+        await Assert.That(range!.CellsUsed().Count()).IsEqualTo(1);
         await Assert.That(range.CellsUsed().Single().GetText()).IsEqualTo("Hello World!");
     }
 
@@ -103,7 +104,7 @@ public class XLRangeBaseTests
         wb.DefinedNames.Add("FNameColumn", $"{table.Name}[FName]");
 
         var namedRange = wb.Range("FNameColumn");
-        await Assert.That(namedRange.Cells().Count()).IsEqualTo(3);
+        await Assert.That(namedRange!.Cells().Count()).IsEqualTo(3);
         await Assert.That(namedRange.CellsUsed().Select(cell => cell.GetText()).SequenceEqual(["John", "Hank", "Dagny"])).IsTrue();
     }
 
@@ -205,11 +206,11 @@ public class XLRangeBaseTests
         var ws = wb.AddWorksheet("Sheet1");
         await Assert.That(ws.Cell("A1").AsRange().Shrink()).IsNull();
         await Assert.That(ws.Range("B2:C3").Shrink()).IsNull();
-        await Assert.That(ws.Range("B2:D4").Shrink().RangeAddress.ToString()).IsEqualTo("C3:C3");
-        await Assert.That(ws.Range("A1:Z26").Shrink(10).RangeAddress.ToString()).IsEqualTo("K11:P16");
+        await Assert.That(ws.Range("B2:D4").Shrink()!.RangeAddress.ToString()).IsEqualTo("C3:C3");
+        await Assert.That(ws.Range("A1:Z26").Shrink(10)!.RangeAddress.ToString()).IsEqualTo("K11:P16");
 
         // Grow and shrink back
-        await Assert.That(ws.Cell("Z26").AsRange().Grow(10).Shrink(10).RangeAddress.ToString()).IsEqualTo("Z26:Z26");
+        await Assert.That(ws.Cell("Z26").AsRange().Grow(10).Shrink(10)!.RangeAddress.ToString()).IsEqualTo("Z26:Z26");
     }
 
     [Test]
@@ -218,18 +219,18 @@ public class XLRangeBaseTests
         using var wb = new XLWorkbook();
         var ws = wb.AddWorksheet("Sheet1");
 
-        await Assert.That(ws.Range("B9:I11").Intersection(ws.Range("D4:G16")).ToString()).IsEqualTo("D9:G11");
-        await Assert.That(ws.Range("E9:I11").Intersection(ws.Range("D4:G16")).ToString()).IsEqualTo("E9:G11");
-        await Assert.That(ws.Cell("E9").AsRange().Intersection(ws.Range("D4:G16")).ToString()).IsEqualTo("E9:E9");
-        await Assert.That(ws.Range("D4:G16").Intersection(ws.Cell("E9").AsRange()).ToString()).IsEqualTo("E9:E9");
+        await Assert.That(ws.Range("B9:I11").Intersection(ws.Range("D4:G16"))!.ToString()).IsEqualTo("D9:G11");
+        await Assert.That(ws.Range("E9:I11").Intersection(ws.Range("D4:G16"))!.ToString()).IsEqualTo("E9:G11");
+        await Assert.That(ws.Cell("E9").AsRange().Intersection(ws.Range("D4:G16"))!.ToString()).IsEqualTo("E9:E9");
+        await Assert.That(ws.Range("D4:G16").Intersection(ws.Cell("E9").AsRange())!.ToString()).IsEqualTo("E9:E9");
 
-        var rangeAddress = (XLRangeAddress)ws.Cell("C3").AsRange().Intersection(ws.Cell("A1").AsRange());
+        var rangeAddress = (XLRangeAddress)ws.Cell("C3").AsRange().Intersection(ws.Cell("A1").AsRange())!;
         await Assert.That(rangeAddress.IsValid).IsFalse();
 
-        rangeAddress = (XLRangeAddress)ws.Cell("A1").AsRange().Intersection(ws.Cell("C3").AsRange());
+        rangeAddress = (XLRangeAddress)ws.Cell("A1").AsRange().Intersection(ws.Cell("C3").AsRange())!;
         await Assert.That(rangeAddress.IsValid).IsFalse();
 
-        await Assert.That(ws.Range("A1:C3").Intersection(null)).IsNull();
+        await Assert.That(ws.Range("A1:C3").Intersection(null!)).IsNull();
 
         var otherWs = wb.AddWorksheet("Sheet2");
         await Assert.That(ws.Intersection(otherWs)).IsNull();
@@ -249,7 +250,7 @@ public class XLRangeBaseTests
 
         await Assert.That(ws.Cell("A1").AsRange().Union(ws.Cell("C3").AsRange()).Count()).IsEqualTo(2);
 
-        await Assert.That(ws.Range("A1:C3").Union(null).Count()).IsEqualTo(9);
+        await Assert.That(ws.Range("A1:C3").Union(null!).Count()).IsEqualTo(9);
 
         var otherWs = wb.AddWorksheet("Sheet2");
         await Assert.That(ws.Union(otherWs).Any()).IsFalse();
@@ -269,7 +270,7 @@ public class XLRangeBaseTests
 
         await Assert.That(ws.Cell("A1").AsRange().Difference(ws.Cell("C3").AsRange()).Count()).IsEqualTo(1);
 
-        await Assert.That(ws.Range("A1:C3").Difference(null).Count()).IsEqualTo(9);
+        await Assert.That(ws.Range("A1:C3").Difference(null!).Count()).IsEqualTo(9);
 
         var otherWs = wb.AddWorksheet("Sheet2");
         await Assert.That(ws.Difference(otherWs).Any()).IsFalse();
@@ -494,7 +495,7 @@ public class XLRangeBaseTests
     {
         var wb = new XLWorkbook();
         var ws = wb.AddWorksheet();
-        var range = ws.Range(rangeAddress) as XLRange;
+        var range = (XLRange)ws.Range(rangeAddress);
         var splitter = ws.Range(splitBy);
 
         var result = range.Split(splitter.RangeAddress, includeIntersection);
@@ -526,7 +527,7 @@ public class XLRangeBaseTests
         // Sort uses cached values - update them
         ws.RecalculateAllFormulas();
 
-        range.Sort("3 DESC");
+        range!.Sort("3 DESC");
 
         await Assert.That(ws.Cell("A2").Value).IsEqualTo(32);
         await Assert.That(ws.Cell("A3").Value).IsEqualTo(6);
@@ -557,4 +558,19 @@ public class XLRangeBaseTests
         var masterCellFormula = ws.Cell("A1").FormulaA1;
         await Assert.That(masterCellFormula).IsEqualTo(expected);
     }
+
+    // IXLRange.Cell and IXLRange.Range are annotated non-null. They used to reach that annotation
+    // with a null-forgiving operator over a lookup that really can return null, which handed the
+    // caller a null through a non-nullable reference and failed later, somewhere else. They now
+    // throw at the call site, matching what IXLWorksheet has always done.
+
+    [Test]
+    public async Task Cell_by_address_throws_when_the_address_resolves_to_nothing()
+    {
+        using var wb = new XLWorkbook();
+        IXLRange range = wb.AddWorksheet().Range("A1:C3");
+
+        await Assert.That(() => range.Cell("not an address")).Throws<ArgumentException>();
+    }
+
 }

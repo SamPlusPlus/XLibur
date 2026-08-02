@@ -291,15 +291,15 @@ public class XLRangeAddressTests
     [Test]
     public async Task TestSpanProperties()
     {
-        var ws = new XLWorkbook().AddWorksheet() as XLWorksheet;
+        var ws = (XLWorksheet)new XLWorkbook().AddWorksheet();
 
-        var range = ws.Range("B3:E5");
+        var range = ws.Range("B3:E5")!;
         var rangeAddress = range.RangeAddress as IXLRangeAddress;
         await Assert.That(rangeAddress.ColumnSpan).IsEqualTo(4);
         await Assert.That(rangeAddress.RowSpan).IsEqualTo(3);
         await Assert.That(rangeAddress.NumberOfCells).IsEqualTo(12);
 
-        range = ws.Range("E5:B3");
+        range = ws.Range("E5:B3")!;
         rangeAddress = range.RangeAddress;
         await Assert.That(rangeAddress.ColumnSpan).IsEqualTo(4);
         await Assert.That(rangeAddress.RowSpan).IsEqualTo(3);
@@ -339,7 +339,7 @@ public class XLRangeAddressTests
     private static IXLRangeAddress ProduceInvalidAddressOnDeletedWorksheet()
     {
         var address = ProduceInvalidAddress();
-        address.Worksheet.Delete();
+        address.Worksheet!.Delete();
         return address;
     }
 

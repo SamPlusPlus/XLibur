@@ -26,12 +26,12 @@ internal class XLPivotDataFieldsTests
             ("Cake", 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
 
         var ex = await Assert.That(() => pt.Values.Add("Wrong field name")).Throws<ArgumentOutOfRangeException>();
 
         await Assert.That(ex).IsNotNull();
-        await Assert.That(ex.Message).StartsWith("Field 'Wrong field name' is not in the fields of a pivot cache. Should be one of 'Name','Price'.");
+        await Assert.That(ex!.Message).StartsWith("Field 'Wrong field name' is not in the fields of a pivot cache. Should be one of 'Name','Price'.");
     }
 
     #endregion
@@ -49,7 +49,7 @@ internal class XLPivotDataFieldsTests
             ("Cake", 10, 5),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         pt.Values.Add("Price");
         pt.Values.Add("Qty");
 
@@ -73,7 +73,7 @@ internal class XLPivotDataFieldsTests
             ("Cake", 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
 
         await Assert.That(() => pt.Values.Clear()).ThrowsNothing();
     }
@@ -89,7 +89,7 @@ internal class XLPivotDataFieldsTests
             ("Cake", 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         pt.Values.Add("Price");
 
         pt.Values.Clear();
@@ -114,7 +114,7 @@ internal class XLPivotDataFieldsTests
             ("Cake", 10, 5),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
         pt.Values.Add("Price");
         pt.Values.Add("Qty");
 
@@ -136,7 +136,7 @@ internal class XLPivotDataFieldsTests
             ("Cake", 10),
         });
         var ptSheet = wb.AddWorksheet();
-        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range);
+        var pt = ptSheet.PivotTables.Add("pt", ptSheet.Cell("A1"), range!);
 
         await Assert.That(() => pt.Values.Remove("NonExistent")).ThrowsNothing();
     }

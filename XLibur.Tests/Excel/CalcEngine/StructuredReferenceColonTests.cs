@@ -23,7 +23,7 @@ internal class StructuredReferenceColonTests
             new object[] { "2026-01-01", "1" }
         };
         var range = ws2.FirstCell().InsertData(data);
-        range.CreateTable("Table2");
+        range!.CreateTable("Table2");
 
         ws.FirstCell().Value = "2026-01-01";
         ws.Cell("B1").FormulaA1 =
@@ -49,7 +49,7 @@ internal class StructuredReferenceColonTests
                 new object[] { "2026-01-01", "1" }
             };
             var range = ws2.FirstCell().InsertData(data);
-            range.CreateTable("Table2");
+            range!.CreateTable("Table2");
 
             var ws = wb.AddWorksheet("Sheet1");
             ws.FirstCell().Value = "2026-01-01";
@@ -95,7 +95,7 @@ internal class StructuredReferenceColonTests
             new object[] { "2026-01-01", "42" }
         };
         var range = ws2.FirstCell().InsertData(data);
-        range.CreateTable("Table2");
+        range!.CreateTable("Table2");
 
         ws.Cell("A1").FormulaA1 = "=Table2[Value]";
 
@@ -117,7 +117,7 @@ internal class StructuredReferenceColonTests
             new object[] { "x", "1", "2" }
         };
         var range = ws2.FirstCell().InsertData(data);
-        range.CreateTable("MyTable");
+        range!.CreateTable("MyTable");
 
         ws.Cell("A1").FormulaA1 =
             "=_xlfn.XLOOKUP(\"x\",MyTable[Key],MyTable[Col: A])+_xlfn.XLOOKUP(\"x\",MyTable[Key],MyTable[Col: B])";
@@ -141,7 +141,7 @@ internal class StructuredReferenceColonTests
             new object[] { "1", "2026-01-01", "2026-12-31" }
         };
         var range = ws2.FirstCell().InsertData(data);
-        range.CreateTable("Dates");
+        range!.CreateTable("Dates");
 
         ws.Cell("A1").FormulaA1 =
             "=_xlfn.XLOOKUP(1,Dates[ID],Dates[Start: Date])";

@@ -42,7 +42,7 @@ public class XLPivotTableTests
 
             var data = wb.Worksheet("Data");
 
-            var pt = data.RangeUsed().CreatePivotTable(wb.AddWorksheet("pvt2").FirstCell(), "pvt2");
+            var pt = data.RangeUsed()!.CreatePivotTable(wb.AddWorksheet("pvt2").FirstCell(), "pvt2");
 
             pt.ColumnLabels.Add("Sex");
             pt.RowLabels.Add("FullName");
@@ -116,7 +116,7 @@ public class XLPivotTableTests
         using var wbassert = new XLWorkbook(ms);
         var wsassert = wbassert.Worksheet("BlankPivotTable");
         var ptassert = wsassert.PivotTable("pvtOptionsTest");
-        await Assert.That(ptassert).IsNotEqualTo(null).Because("name save failure");
+        await Assert.That(ptassert).IsNotNull().Because("name save failure");
         await Assert.That(ptassert.ColumnHeaderCaption).IsEqualTo("clmn header").Because("ColumnHeaderCaption save failure");
         await Assert.That(ptassert.RowHeaderCaption).IsEqualTo("row header").Because("RowHeaderCaption save failure");
         await Assert.That(ptassert.MergeAndCenterWithLabels).IsTrue().Because("MergeAndCenterWithLabels save failure");
@@ -187,7 +187,7 @@ public class XLPivotTableTests
         var wsassert = wbassert.Worksheet("pvtFieldOptionsTest");
         var ptassert = wsassert.PivotTable("pvtFieldOptionsTest");
         var pfassert = ptassert.RowLabels.Get("Name");
-        await Assert.That(pfassert).IsNotEqualTo(null).Because("name save failure");
+        await Assert.That(pfassert).IsNotNull().Because("name save failure");
         await Assert.That(pfassert.SubtotalCaption).IsEqualTo("Test caption").Because("SubtotalCaption save failure");
         await Assert.That(pfassert.CustomName).IsEqualTo("Test name").Because("CustomName save failure");
         await AssertFieldOptions(pfassert, withDefaults);
@@ -200,21 +200,21 @@ public class XLPivotTableTests
         using var stream = TestHelper.GetStreamFromResource(TestHelper.GetResourcePath(@"Examples\PivotTables\PivotTables.xlsx"));
         using var wb = new XLWorkbook(stream);
         var ws1 = wb.Worksheet("pvt1");
-        var pt1 = ws1.PivotTables.First() as XLPivotTable;
+        var pt1 = (XLPivotTable)ws1.PivotTables.First();
 
         await Assert.That(() => pt1.CopyTo(pt1.TargetCell)).Throws<InvalidOperationException>();
 
-        var pt2 = pt1.CopyTo(ws1.Cell("AB100")) as XLPivotTable;
+        var pt2 = (XLPivotTable)pt1.CopyTo(ws1.Cell("AB100"));
 
         await AssertPivotTablesAreEqual(pt1, pt2, compareName: false);
 
         var ws2 = wb.AddWorksheet("Copy Of pvt1");
-        await AssertPivotTablesAreEqual(pt1, pt1.CopyTo(ws2.FirstCell()) as XLPivotTable, compareName: true);
+        await AssertPivotTablesAreEqual(pt1, (XLPivotTable)pt1.CopyTo(ws2.FirstCell()), compareName: true);
 
         using var wb2 = new XLWorkbook();
         wb.Worksheet("PastrySalesData").CopyTo(wb2);
 
-        await AssertPivotTablesAreEqual(pt1, pt1.CopyTo(wb2.AddWorksheet("pvt").FirstCell()) as XLPivotTable, compareName: true);
+        await AssertPivotTablesAreEqual(pt1, (XLPivotTable)pt1.CopyTo(wb2.AddWorksheet("pvt").FirstCell()), compareName: true);
     }
 
     private static async Task AssertPivotTablesAreEqual(XLPivotTable original, XLPivotTable copy, bool compareName)
@@ -350,7 +350,7 @@ public class XLPivotTableTests
 
             // Add a new sheet for our pivot table
             var ptSheet = wb.Worksheets.Add("pvt");
-            var pt = ptSheet.PivotTables.Add("pvt", ptSheet.Cell(1, 1), range);
+            var pt = ptSheet.PivotTables.Add("pvt", ptSheet.Cell(1, 1), range!);
             pt.RowLabels.Add("Name");
             pt.Values.Add("Sold count");
 
@@ -590,7 +590,7 @@ public class XLPivotTableTests
         await TestHelper.CreateAndCompare(() =>
         {
             var wb = new XLWorkbook(stream);
-            var srcRange = wb.Range("Sheet1!$B$2:$H$207");
+            var srcRange = wb.Range("Sheet1!$B$2:$H$207")!;
 
             var pivotSource = wb.PivotCaches.Add(srcRange);
 
@@ -652,8 +652,8 @@ public class XLPivotTableTests
             ("Pie", 14),
         });
 
-        var rangePivot1 = ws.PivotTables.Add("rangePivot1", ws.Cell("D1"), range);
-        var rangePivot2 = ws.PivotTables.Add("rangePivot2", ws.Cell("D20"), range);
+        var rangePivot1 = ws.PivotTables.Add("rangePivot1", ws.Cell("D1"), range!);
+        var rangePivot2 = ws.PivotTables.Add("rangePivot2", ws.Cell("D20"), range!);
 
         await Assert.That(rangePivot2).IsNotSameReferenceAs(rangePivot1);
         await Assert.That(rangePivot2.PivotCache).IsSameReferenceAs(rangePivot1.PivotCache);
@@ -784,7 +784,7 @@ public class XLPivotTableTests
             ("Name", "City", "Flavor", "Sales"),
             ("Cake", "Tokyo", "Vanilla", 7),
         });
-        var pt = ws.PivotTables.Add("pt", ws.Cell("E1"), data);
+        var pt = ws.PivotTables.Add("pt", ws.Cell("E1"), data!);
         pt.ReportFilters.Add("City");
 
         // Even when we added filter and a gap row, the target cell is still E1
@@ -813,7 +813,7 @@ public class XLPivotTableTests
             ("Cake", "Tokyo", "Vanilla", 7),
         });
 
-        var pt = ws.PivotTables.Add("pt", ws.Cell("E1"), data);
+        var pt = ws.PivotTables.Add("pt", ws.Cell("E1"), data!);
         pt.FilterAreaOrder = order;
 
         pt.ReportFilters.Add("Name");
@@ -851,7 +851,7 @@ public class XLPivotTableTests
 
                 var ptSheet = wb.AddWorksheet().SetTabActive();
                 ptSheet.Column("A").Width = 15;
-                var pt = dataRange.CreatePivotTable(ptSheet.Cell("A1"), "pivot table");
+                var pt = dataRange!.CreatePivotTable(ptSheet.Cell("A1"), "pivot table");
 
                 // Add at least two fields to each axis to make each layout distinctive.
                 pt.RowLabels.Add("Name");
@@ -941,7 +941,7 @@ public class XLPivotTableTests
 
         using var doc = SpreadsheetDocument.Open(ms, false);
         var cachePart = doc.WorkbookPart!.GetPartsOfType<PivotTableCacheDefinitionPart>().First();
-        var cacheFields = cachePart.PivotCacheDefinition.CacheFields!.Elements<CacheField>().ToList();
+        var cacheFields = cachePart.PivotCacheDefinition!.CacheFields!.Elements<CacheField>().ToList();
         await Assert.That(cacheFields.Count).IsEqualTo(4);
 
         var calcField = cacheFields[3];
@@ -968,7 +968,7 @@ public class XLPivotTableTests
         outputStream.Position = 0;
         using var doc = SpreadsheetDocument.Open(outputStream, false);
         var cachePart = doc.WorkbookPart!.GetPartsOfType<PivotTableCacheDefinitionPart>().First();
-        var cacheFields = cachePart.PivotCacheDefinition.CacheFields!.Elements<CacheField>().ToList();
+        var cacheFields = cachePart.PivotCacheDefinition!.CacheFields!.Elements<CacheField>().ToList();
 
         // Should have 3 data fields + 1 calculated field = 4 total
         await Assert.That(cacheFields.Count).IsEqualTo(4).Because("Expected 3 source fields + 1 calculated field");
@@ -1201,7 +1201,7 @@ public class XLPivotTableTests
         var pivotTablePart = doc.WorkbookPart!.WorksheetParts
             .SelectMany(wsp => wsp.GetPartsOfType<PivotTablePart>())
             .First();
-        var pivotFields = pivotTablePart.PivotTableDefinition.PivotFields!.Elements<PivotField>().ToList();
+        var pivotFields = pivotTablePart.PivotTableDefinition!.PivotFields!.Elements<PivotField>().ToList();
 
         // Field 0 (Name) has sortType="descending" and autoSortScope
         var nameField = pivotFields[0];
