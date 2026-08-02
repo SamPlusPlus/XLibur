@@ -115,7 +115,7 @@ reference, and [XLibur.Report.Examples](XLibur.Report.Examples/README.md) for te
 ## Benchmarks
 
 Published results are available at
-[jafin.github.io/XLBench](https://jafin.github.io/XLBench/charts.html). Snapshot from 2026-07-20:
+[jafin.github.io/XLBench](https://jafin.github.io/XLBench/charts.html). Snapshot from 2026-08-02:
 
 [![XLibur benchmark results](docs/benchmark_snapshot.jpg)](https://jafin.github.io/XLBench/charts.html)
 
