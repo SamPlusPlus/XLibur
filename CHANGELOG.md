@@ -9,6 +9,8 @@
 
 ## Unreleased
 
+## v0.301.0 - 2026-08-04
+
 ### 🐛 Bug Fixes
 
 #### Formulas
