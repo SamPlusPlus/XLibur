@@ -348,15 +348,13 @@ public partial class XLWorkbook
         {
             while (reader.Read())
             {
-                // Custom sheet views contain their own auto filter data, and more, which should be ignored for now
-                while (reader.ElementType == typeof(CustomSheetViews))
+                // Skipped wholesale, without descending:
+                //  - CustomSheetViews carries its own auto filter data and more, ignored for now.
+                //  - SheetData is read in pass 2 by the raw reader.
+                // ReadNextSibling leaves the reader *on* the next sibling rather than needing
+                // another Read, which is why this is a leading loop rather than a `continue`.
+                while (reader.ElementType == typeof(CustomSheetViews) || reader.ElementType == typeof(SheetData))
                     reader.ReadNextSibling();
-
-                if (reader.ElementType == typeof(SheetData))
-                {
-                    SkipSheetData(reader);
-                    continue;
-                }
 
                 if (reader.ElementType == typeof(SheetProperties))
                 {
@@ -373,36 +371,21 @@ public partial class XLWorkbook
     }
 
     /// <summary>
-    /// Advances the SDK reader past the entire <c>&lt;sheetData&gt;</c> subtree without
-    /// materializing rows/cells. The reader is positioned on <c>&lt;sheetData&gt;</c>; on return it
-    /// is on the <c>&lt;/sheetData&gt;</c> end element so the caller's <c>Read()</c> continues with
-    /// the next sibling. Rows are skipped individually (mirroring <see cref="LoadMergeCellsStreaming"/>)
-    /// because <see cref="OpenXmlPartReader.Skip"/> leaves the reader on the next sibling.
-    /// </summary>
-    private static void SkipSheetData(OpenXmlPartReader reader)
-    {
-        reader.MoveAhead(); // Move into <sheetData> (first <row> or </sheetData>).
-
-        while (reader.IsStartElement("row"))
-            reader.Skip();
-    }
-
-    /// <summary>
     /// Reads the <c>&lt;sheetData&gt;</c> rows and cells from a raw <see cref="XmlReader"/> opened
     /// over the worksheet part stream. See <see cref="WorksheetSheetDataReader.LoadSheetDataRows"/>.
     /// </summary>
+    /// <remarks>
+    /// Opening a second stream over the part and rescanning to <c>&lt;sheetData&gt;</c> is close to
+    /// free — measured at 0.05–0.65 ms per load across sheet shapes, because everything ahead of
+    /// <c>&lt;sheetData&gt;</c> is small. Collapsing the two passes into one is therefore not worth
+    /// the loader rewrite it would take.
+    /// </remarks>
     private static void LoadSheetDataRaw(WorksheetPart worksheetPart,
         in WorksheetSheetDataReader.SheetDataReadContext context,
         ref WorksheetSheetDataReader.SheetDataReadState state)
     {
         using var stream = worksheetPart.GetStream(FileMode.Open, FileAccess.Read);
-        using var reader = XmlReader.Create(stream, new XmlReaderSettings
-        {
-            IgnoreWhitespace = true,
-            IgnoreComments = true,
-            IgnoreProcessingInstructions = true,
-            CloseInput = false
-        });
+        using var reader = PartXmlReader.Create(stream);
 
         while (reader.Read())
         {
@@ -975,29 +958,133 @@ public partial class XLWorkbook
         return defaultColumnWidth;
     }
 
+    /// <summary>
+    /// Reads the twelve theme colours out of <c>&lt;a:clrScheme&gt;</c>.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately a raw <see cref="XmlReader"/> rather than <c>tp.Theme</c>. Touching the DOM
+    /// property materialises the whole theme part — font scheme, format scheme, gradient fills,
+    /// effect styles, and often an <c>extraClrSchemeLst</c> — which for a stock Excel theme is
+    /// ~7 KB of dense XML built into an object graph, all to read twelve hex strings. That is a
+    /// fixed cost paid on every workbook load regardless of its size, and it measured at ~8% of
+    /// total load time for a small workbook.
+    /// <para>
+    /// Only <c>&lt;a:srgbClr&gt;</c> is honoured, matching the DOM version this replaced: a slot
+    /// carrying <c>&lt;a:sysClr&gt;</c> leaves the corresponding <see cref="XLWorkbook.Theme"/>
+    /// property at its default.
+    /// </para>
+    /// </remarks>
     private static void LoadWorkbookTheme(ThemePart? tp, XLWorkbook wb)
     {
-        var colorScheme = tp?.Theme?.ThemeElements?.ColorScheme;
-        if (colorScheme == null) return;
+        if (tp is null) return;
 
-        static void SetIfPresent(string? hex, Action<XLColor> setter)
+        using var stream = tp.GetStream(FileMode.Open, FileAccess.Read);
+        using var reader = PartXmlReader.Create(stream);
+
+        // <a:theme> (0) / <a:themeElements> (1) / <a:clrScheme> (2). Matching on depth as well as
+        // name is what keeps the scan off the <a:clrScheme> nested inside <a:extraClrSchemeLst>,
+        // which lives a level deeper and would otherwise overwrite the real scheme.
+        if (!MoveToThemeElement(reader, "theme", depth: 0) ||
+            !MoveToThemeElement(reader, "themeElements", depth: 1) ||
+            !MoveToThemeElement(reader, "clrScheme", depth: 2) ||
+            reader.IsEmptyElement)
+            return;
+
+        var schemeDepth = reader.Depth;
+        var theme = wb.Theme;
+
+        while (reader.Read())
         {
-            if (!string.IsNullOrEmpty(hex))
-                setter(XLColor.FromHexRgb(hex));
+            if (reader.NodeType == XmlNodeType.EndElement && reader.Depth == schemeDepth)
+                break;
+
+            if (reader.NodeType != XmlNodeType.Element ||
+                reader.NamespaceURI != OpenXmlConst.DrawingMain2006Ns)
+                continue;
+
+            // ReadSlotColor consumes the slot's subtree, so the next Read lands on the next slot.
+            var slot = reader.LocalName;
+            var hex = ReadSlotColor(reader);
+            if (string.IsNullOrEmpty(hex))
+                continue;
+
+            // A theme is decoration, so a malformed slot should cost that one colour rather than
+            // the whole workbook. FromHexRgb throws FormatException both for a value that is not
+            // six characters and for one containing a non-hex character.
+            XLColor color;
+            try
+            {
+                color = XLColor.FromHexRgb(hex);
+            }
+            catch (FormatException)
+            {
+                continue;
+            }
+
+            switch (slot)
+            {
+                case "lt1": theme.Background1 = color; break;
+                case "dk1": theme.Text1 = color; break;
+                case "lt2": theme.Background2 = color; break;
+                case "dk2": theme.Text2 = color; break;
+                case "accent1": theme.Accent1 = color; break;
+                case "accent2": theme.Accent2 = color; break;
+                case "accent3": theme.Accent3 = color; break;
+                case "accent4": theme.Accent4 = color; break;
+                case "accent5": theme.Accent5 = color; break;
+                case "accent6": theme.Accent6 = color; break;
+                case "hlink": theme.Hyperlink = color; break;
+                case "folHlink": theme.FollowedHyperlink = color; break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Advances to the next DrawingML element with the given name at the given depth, giving up
+    /// once the reader leaves the current parent.
+    /// </summary>
+    private static bool MoveToThemeElement(XmlReader reader, string localName, int depth)
+    {
+        while (reader.Read())
+        {
+            if (reader.Depth < depth)
+                return false;
+
+            if (reader.NodeType == XmlNodeType.Element &&
+                reader.Depth == depth &&
+                reader.LocalName == localName &&
+                reader.NamespaceURI == OpenXmlConst.DrawingMain2006Ns)
+                return true;
         }
 
-        SetIfPresent(colorScheme.Light1Color?.RgbColorModelHex?.Val?.Value, c => wb.Theme.Background1 = c);
-        SetIfPresent(colorScheme.Dark1Color?.RgbColorModelHex?.Val?.Value, c => wb.Theme.Text1 = c);
-        SetIfPresent(colorScheme.Light2Color?.RgbColorModelHex?.Val?.Value, c => wb.Theme.Background2 = c);
-        SetIfPresent(colorScheme.Dark2Color?.RgbColorModelHex?.Val?.Value, c => wb.Theme.Text2 = c);
-        SetIfPresent(colorScheme.Accent1Color?.RgbColorModelHex?.Val?.Value, c => wb.Theme.Accent1 = c);
-        SetIfPresent(colorScheme.Accent2Color?.RgbColorModelHex?.Val?.Value, c => wb.Theme.Accent2 = c);
-        SetIfPresent(colorScheme.Accent3Color?.RgbColorModelHex?.Val?.Value, c => wb.Theme.Accent3 = c);
-        SetIfPresent(colorScheme.Accent4Color?.RgbColorModelHex?.Val?.Value, c => wb.Theme.Accent4 = c);
-        SetIfPresent(colorScheme.Accent5Color?.RgbColorModelHex?.Val?.Value, c => wb.Theme.Accent5 = c);
-        SetIfPresent(colorScheme.Accent6Color?.RgbColorModelHex?.Val?.Value, c => wb.Theme.Accent6 = c);
-        SetIfPresent(colorScheme.Hyperlink?.RgbColorModelHex?.Val?.Value, c => wb.Theme.Hyperlink = c);
-        SetIfPresent(colorScheme.FollowedHyperlinkColor?.RgbColorModelHex?.Val?.Value, c => wb.Theme.FollowedHyperlink = c);
+        return false;
+    }
+
+    /// <summary>
+    /// Reads the <c>val</c> of the first <c>&lt;a:srgbClr&gt;</c> inside the colour slot the
+    /// reader is positioned on, consuming the slot's subtree.
+    /// </summary>
+    private static string? ReadSlotColor(XmlReader reader)
+    {
+        if (reader.IsEmptyElement)
+            return null;
+
+        var slotDepth = reader.Depth;
+        string? hex = null;
+
+        while (reader.Read())
+        {
+            if (reader.NodeType == XmlNodeType.EndElement && reader.Depth == slotDepth)
+                break;
+
+            if (hex is null &&
+                reader.NodeType == XmlNodeType.Element &&
+                reader.LocalName == "srgbClr" &&
+                reader.NamespaceURI == OpenXmlConst.DrawingMain2006Ns)
+                hex = reader.GetAttribute("val");
+        }
+
+        return hex;
     }
 
     private static void LoadWorkbookProtection(WorkbookProtection? wp, XLWorkbook wb)
