@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using XLibur.Excel.Caching;
 
 namespace XLibur.Excel;
@@ -51,47 +52,119 @@ internal sealed class XLStyleValue : IEquatable<XLStyleValue?>
     /// Direct-mapped transition cache stored per base style. When many cells undergo the same
     /// style transition (e.g., Default → Bold=true), this cache returns the result immediately
     /// without computing XLStyleKey hash or hitting the ConcurrentDictionary repository.
-    /// Each entry is a (hash, result) pair; collisions simply evict.
+    /// Each slot holds one <see cref="TransitionEntry"/>; slot collisions simply evict.
     /// Thread-safety: benign races at most cause a cache miss, never incorrect results.
     /// </summary>
+    /// <remarks>
+    /// The component key is held alongside the hash and compared on every hit. Matching on the hash
+    /// alone is not sufficient: two distinct component keys sharing a 32-bit hash would return each
+    /// other's style, silently giving a cell a format, font or border it was never assigned.
+    /// <para>
+    /// That is not the remote possibility it looks like. A custom number format pins
+    /// <c>NumberFormatId</c> to a constant −1, so its key hash reduces to the hash of the format
+    /// string, and a birthday search finds a colliding pair of ordinary-looking format strings among
+    /// roughly 2^16 candidates — milliseconds of work. For a workbook applying k distinct custom
+    /// formats to default-styled cells the odds run near k²/2^33. <c>XLFontKey</c> carries a font
+    /// name and is exposed the same way.
+    /// </para>
+    /// <para>
+    /// Because <see cref="string.GetHashCode()"/> is randomised per process, such a defect does not
+    /// reproduce: the same workbook round-trips correctly on most runs and corrupts on others, with
+    /// nothing in the file to explain it. The hash stays as the cheap reject; the key comparison is
+    /// what makes a hit sound.
+    /// </para>
+    /// </remarks>
     private const int TransitionCacheSize = 8;
     private const int TransitionCacheMask = TransitionCacheSize - 1;
 
-    private int[]? _transitionHashes;
-    private XLStyleValue?[]? _transitionResults;
+    private TransitionEntry?[]? _transitionCache;
+
+    /// <summary>
+    /// One cached transition: the hash a lookup gates on, the component key that hash stands for,
+    /// and the resulting style.
+    /// </summary>
+    /// <remarks>
+    /// The three travel together in one immutable object so that a slot can be filled by a single
+    /// reference write. Held as separate arrays they could not be: two threads storing different
+    /// keys into the same slot may interleave their writes, leaving a reader an entry whose key and
+    /// result come from different transitions — a wrong style, not a miss.
+    /// </remarks>
+    private abstract class TransitionEntry
+    {
+        protected TransitionEntry(int hash, XLStyleValue result)
+        {
+            Hash = hash;
+            Result = result;
+        }
+
+        internal readonly int Hash;
+
+        internal readonly XLStyleValue Result;
+    }
+
+    /// <summary>
+    /// A <see cref="TransitionEntry"/> holding its component key in its own type, so the key costs
+    /// no box and a lookup for a different component type is rejected by the cast.
+    /// </summary>
+    private sealed class TransitionEntry<TKey> : TransitionEntry
+        where TKey : struct, IEquatable<TKey>
+    {
+        internal TransitionEntry(int hash, in TKey key, XLStyleValue result)
+            : base(hash, result)
+        {
+            Key = key;
+        }
+
+        internal readonly TKey Key;
+    }
 
     /// <summary>
     /// Look up a cached transition from this style. Returns null on miss.
     /// </summary>
-    internal XLStyleValue? GetTransition(int transitionHash)
+    /// <param name="transitionHash">Hash of <paramref name="componentKey"/>, mixed with a tag identifying its component.</param>
+    /// <param name="componentKey">The component key being applied, compared against the cached entry.</param>
+    internal XLStyleValue? GetTransition<TKey>(int transitionHash, in TKey componentKey)
+        where TKey : struct, IEquatable<TKey>
     {
-        var hashes = _transitionHashes;
-        if (hashes is null)
+        // Both reads acquire, pairing with the releasing writes in StoreTransition: an entry is seen
+        // either not at all or fully constructed, and the array is never seen before it is usable.
+        var cache = Volatile.Read(ref _transitionCache);
+        if (cache is null)
             return null;
 
-        var slot = transitionHash & TransitionCacheMask;
-        if (hashes[slot] == transitionHash)
-            return _transitionResults![slot];
+        var entry = Volatile.Read(ref cache[transitionHash & TransitionCacheMask]);
 
-        return null;
+        // The cast also rejects a hash collision between two different component types, which the
+        // tag mixed into the hash makes unlikely but does not prevent.
+        if (entry is not TransitionEntry<TKey> typed || typed.Hash != transitionHash)
+            return null;
+
+        return typed.Key.Equals(componentKey) ? typed.Result : null;
     }
 
     /// <summary>
     /// Store a transition result and return it (for fluent use: value ?? StoreTransition(...)).
     /// </summary>
-    internal XLStyleValue StoreTransition(int transitionHash, XLStyleValue result)
+    /// <remarks>
+    /// Allocates one entry. That cost falls only on a miss — one entry per distinct transition per
+    /// base style, not per cell — so the repeat transitions this cache exists to serve do not pay it.
+    /// </remarks>
+    internal XLStyleValue StoreTransition<TKey>(int transitionHash, in TKey componentKey, XLStyleValue result)
+        where TKey : struct, IEquatable<TKey>
     {
-        var hashes = _transitionHashes;
-        if (hashes is null)
+        var cache = Volatile.Read(ref _transitionCache);
+        if (cache is null)
         {
-            hashes = new int[TransitionCacheSize];
-            _transitionResults = new XLStyleValue?[TransitionCacheSize];
-            _transitionHashes = hashes;
+            var created = new TransitionEntry?[TransitionCacheSize];
+
+            // Whoever loses keeps writing into the winner's array, so no entry is stranded in an
+            // array no reader can reach.
+            cache = Interlocked.CompareExchange(ref _transitionCache, created, null) ?? created;
         }
 
-        var slot = transitionHash & TransitionCacheMask;
-        hashes[slot] = transitionHash;
-        _transitionResults![slot] = result;
+        Volatile.Write(
+            ref cache[transitionHash & TransitionCacheMask],
+            new TransitionEntry<TKey>(transitionHash, in componentKey, result));
         return result;
     }
 
