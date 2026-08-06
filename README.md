@@ -128,6 +128,7 @@ MIT — see [LICENSE](LICENSE).
 
 ## Credits
 
-ClosedXML authors [Manuel de Leon](https://github.com/mdeleone),
+ClosedXML authors who developed the core code we sit on. 
+[Manuel de Leon](https://github.com/mdeleone),
 [Jan Havlíček](https://github.com/jahav), [Francois Botha](https://github.com/igitur),
 [Aleksei Pankratev](https://github.com/Pankraty).
