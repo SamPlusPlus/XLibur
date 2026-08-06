@@ -12,8 +12,7 @@ XLibur is a .NET 8+ library for reading, manipulating, and writing Excel 2007+ (
 It provides an intuitive interface over the underlying
 [OpenXML](https://github.com/OfficeDev/Open-XML-SDK) API.
 
-XLibur forked [ClosedXML v0.105.0](https://github.com/ClosedXML/ClosedXML/), created
-to ship patches and improvements that didn't land upstream. Namespaces are prefixed with `XLibur`.
+XLibur forked [ClosedXML v0.105.0](https://github.com/ClosedXML/ClosedXML/), applied patches and improvements that didn't land upstream. Namespaces are prefixed with `XLibur`.
 
 📖 **[Documentation](https://xlibur.github.io/XLibur/)** ·
 [Getting Started](https://xlibur.github.io/XLibur/getting-started) ·
