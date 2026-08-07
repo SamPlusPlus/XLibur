@@ -15,8 +15,24 @@ public class SaveOptions
     /// larger file for a quicker save.
     /// </summary>
     /// <remarks>
-    /// Only applies to parts this save creates. Re-saving a workbook that was loaded from an
-    /// existing file leaves the parts it already had at whatever level they were written with.
+    /// <b>Applies only to parts this save creates.</b> A zip entry's compression is fixed when the
+    /// entry is created, so a workbook that was loaded from a file or stream — or one already saved
+    /// once, since it adopts its destination as its origin — keeps every <i>existing</i> part at the
+    /// level it was first written with. That includes parts XLibur rewrites itself: a reopened
+    /// <c>sheet1.xml</c> keeps its original entry, so new sheet data goes in at the old level.
+    /// <para>
+    /// Parts the save genuinely adds are a different matter and <i>do</i> honour the setting: the
+    /// level is applied to the package before parts are written, so a worksheet, table or image
+    /// that did not exist in the template gets the requested compression. A template-driven export
+    /// therefore lands somewhere in between — new parts at the chosen level, everything inherited
+    /// from the template unchanged — and the more the output is reused from the template, the less
+    /// the setting can reach.
+    /// </para>
+    /// <para>
+    /// Consequently only a workbook built from scratch and saved for the first time has the setting
+    /// applied throughout. Measurements are in <c>docs/specs/19-benchmark-hotspot-survey.md</c>,
+    /// area 3.
+    /// </para>
     /// </remarks>
     public CompressionLevel CompressionLevel { get; set; } = CompressionLevel.Optimal;
 

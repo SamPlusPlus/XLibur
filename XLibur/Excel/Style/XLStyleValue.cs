@@ -74,7 +74,26 @@ internal sealed class XLStyleValue : IEquatable<XLStyleValue?>
     /// what makes a hit sound.
     /// </para>
     /// </remarks>
-    private const int TransitionCacheSize = 8;
+    /// <summary>
+    /// Slots per base style. <b>Must stay a power of two</b> — <see cref="TransitionCacheMask"/>
+    /// derives the slot from it by masking.
+    /// </summary>
+    /// <remarks>
+    /// Sized so the cache holds a realistic working set rather than thrashing. At the original 8
+    /// slots a styling workload's misses were almost entirely evictions rather than cold slots, so
+    /// the cache was re-deriving styles it had already computed; enlarging it removes that without
+    /// changing any behaviour. Deliberately larger than the smallest size that stopped thrashing,
+    /// because which sizes alias badly depends on the workload's hashes and tuning to one of them
+    /// would be overfitting. The array is allocated lazily on first store, so the cost falls only on
+    /// base styles that actually receive a transition.
+    /// <para>
+    /// The measured miss breakdown and size sweep behind this are in
+    /// <c>docs/specs/19-benchmark-hotspot-survey.md</c>, area 2 task 2.3, and are not repeated here
+    /// because they are numbers from one fixture on one machine and will go stale.
+    /// </para>
+    /// </remarks>
+    private const int TransitionCacheSize = 64;
+
     private const int TransitionCacheMask = TransitionCacheSize - 1;
 
     private TransitionEntry?[]? _transitionCache;

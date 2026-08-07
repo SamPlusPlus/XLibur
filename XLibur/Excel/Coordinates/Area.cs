@@ -90,9 +90,30 @@ internal readonly struct Area : IEquatable<Area>, IEnumerable<Point>
         return FirstPoint.Equals(other.FirstPoint) && LastPoint.Equals(other.LastPoint);
     }
 
+    /// <summary>
+    /// Combines the two corners rather than XOR-ing them, because a XOR self-cancels on the
+    /// commonest area there is.
+    /// </summary>
+    /// <remarks>
+    /// A single-cell area has <see cref="FirstPoint"/> equal to <see cref="LastPoint"/>, so
+    /// <c>first ^ last</c> was <b>zero for every one of them</b> — and a single cell is what most
+    /// references in a workbook are. Any <c>Dictionary</c> keyed on <see cref="Area"/> therefore put
+    /// every distinct single-cell key in one bucket and degraded to a linear scan.
+    /// <para>
+    /// That made every consumer keyed on an area quadratic in the number of distinct single-cell
+    /// keys — the dependency tree over a workbook's formula precedents, and
+    /// <c>XLHyperlinks</c>, whose keys are all single cells. Measurements are in
+    /// <c>docs/specs/19-benchmark-hotspot-survey.md</c>, area 5, rather than here.
+    /// </para>
+    /// <para>
+    /// A XOR is also symmetric, so it collapsed each rectangle onto its own reversal. Only the
+    /// normalised order is ever constructed, so nothing depended on telling them apart, but
+    /// combining fixes that too. <c>AreaHashCodeTests</c> pins both properties as distributions.
+    /// </para>
+    /// </remarks>
     public override int GetHashCode()
     {
-        return FirstPoint.GetHashCode() ^ LastPoint.GetHashCode();
+        return HashCode.Combine(FirstPoint, LastPoint);
     }
 
     public static bool operator ==(Area left, Area right) => left.Equals(right);
