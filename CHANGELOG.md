@@ -3,6 +3,7 @@
 ## Contents
 
 - [Unreleased](#unreleased)
+- [v0.311.0](#v03110---2026-08-08)
 - [v0.310.0](#v03100---2026-08-06)
 - [v0.301.0](#v03010---2026-08-04)
 - [v0.300.0](#v03000---2026-08-02)
@@ -11,6 +12,8 @@
 - [v0.106.0](#v01060---2026-07-25)
 
 ## Unreleased
+
+## v0.311.0 - 2026-08-08
 
 A performance release for cell styles, with two breaking changes. Style data now uses about half the memory it used before, and XLibur compares and looks up styles faster. `XLColor.Color` no longer returns a named colour, and the two alignment style types are now internal; each needs a small code change if you use it. Four bug fixes: an edge with no border line now always reports the same colour, setting an edge's colour before its line style no longer loses the colour, and an out-of-range value cast into a border, colour or alignment enum is now rejected instead of silently aliasing a different one.
 
