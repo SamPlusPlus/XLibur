@@ -3,6 +3,7 @@
 ## Contents
 
 - [Unreleased](#unreleased)
+- [v0.310.0](#v03100---2026-08-06)
 - [v0.301.0](#v03010---2026-08-04)
 - [v0.300.0](#v03000---2026-08-02)
 - [v0.200.0](#v02000---2026-08-01)
@@ -10,6 +11,61 @@
 - [v0.106.0](#v01060---2026-07-25)
 
 ## Unreleased
+
+A performance release for cell styles, with two breaking changes. Style data now uses about half the memory it used before, and XLibur compares and looks up styles faster. `XLColor.Color` no longer returns a named colour, and the two alignment style types are now internal; each needs a small code change if you use it. Four bug fixes: an edge with no border line now always reports the same colour, setting an edge's colour before its line style no longer loses the colour, and an out-of-range value cast into a border, colour or alignment enum is now rejected instead of silently aliasing a different one.
+
+### ⚠️ Breaking Changes
+
+#### Colors
+
+- **`XLColor.Color` returns a plain colour, not a named one.** The alpha, red, green and blue values are the same as before. What changes is that the result is no longer a *known* colour such as `Color.Red`: its `Name` is now a string of hex digits, and `IsNamedColor` is false. `Color.Equals` checks that name as well as the four channels, so compare ARGB values instead. XLibur reads only the four channels, and a colour loaded from a spreadsheet has no name to keep. ([#379](https://github.com/XLibur/XLibur/pull/379) by [@jafin](https://github.com/jafin))
+
+  ```csharp
+  // Before
+  Assert.AreEqual(Color.Red, xlColor.Color);
+
+  // After
+  Assert.AreEqual(Color.Red.ToArgb(), xlColor.Color.ToArgb());
+  ```
+
+#### Styles
+
+- **`XLAlignmentKey` and `XLAlignmentValue` are now internal.** XLibur builds a style from eight parts: alignment, border, fill, font, number format, protection, colour, and the style itself. The other seven have always been internal. Alignment was public on its own, and by accident — no public member returns an `XLAlignmentValue`, and neither type appears in the list of types XLibur undertakes to keep. Read and set alignment through `IXLStyle.Alignment`, which does not change. ([#379](https://github.com/XLibur/XLibur/pull/379) by [@jafin](https://github.com/jafin))
+
+  ```csharp
+  // Before
+  var alignment = XLAlignmentValue.FromKey(ref key);
+  var wraps = alignment.WrapText;
+
+  // After
+  var wraps = cell.Style.Alignment.WrapText;
+  ```
+
+### ⚡ Performance
+
+#### Styles
+
+- **Style data uses about half the memory it used before.** XLibur identifies each distinct cell format by a style key, and copies that key whenever you change a format and again on every cache lookup. Colours filled most of the key, and most of each colour went unread: XLibur uses the four ARGB bytes, but each colour also carried a whole `System.Drawing.Color` beside separate palette, theme and tint fields. A colour is only ever one of those things at a time, so the four now share one field. A border key is a third of its former size, and a full style key about half. ([#379](https://github.com/XLibur/XLibur/pull/379) by [@jafin](https://github.com/jafin))
+
+  Hashing a border key is about twice as fast, and fill and colour keys about 15% faster. Part of that comes from reading less memory rather than doing less work, so it helps most in a workbook that holds many different styles. Noise on the test machine hides the change in the end-to-end styling benchmarks, so this release makes no claim for them.
+
+- **Saving a workbook compares styles faster.** Each part of a style worked out its hash every time something asked for one. Saving uses these parts as dictionary keys, so each lookup of a border hashed all five of its colours again. Every part now works out its hash once, when XLibur creates it. Two parts that are the same object also count as equal without a comparison of their contents, which is the usual case because XLibur keeps one shared copy of each. ([#379](https://github.com/XLibur/XLibur/pull/379) by [@jafin](https://github.com/jafin))
+
+- **Setting a border on a range, row, column or worksheet does less work.** XLibur stored the new border in its cache, then built a style that stored the same border again. It also applied the change twice. It now takes the stored border from the finished style. ([#379](https://github.com/XLibur/XLibur/pull/379) by [@jafin](https://github.com/jafin))
+
+### 🐛 Bug Fixes
+
+#### Styles
+
+- **An edge with no border line always reports the same colour.** Two borders that differ only in the colour of an edge with no line have always counted as equal, so XLibur kept whichever it saw first. Setting a colour on such an edge did nothing, which is correct — Excel draws no line there, and writes no colour — but the colour you read back depended on what the workbook had done earlier. These edges now always report black. ([#379](https://github.com/XLibur/XLibur/pull/379) by [@jafin](https://github.com/jafin))
+
+  A file can give an edge a colour but no line style, because the two are independent. XLibur now treats such a border the same way, so it matches the border already in the file instead of saving a second copy of it.
+
+- **Setting an edge's colour before its line style no longer loses the colour.** The fix above means a colour set on an edge with no line style is dropped there and then, so `border.TopBorderColor = Red; border.TopBorder = Thin;` used to end up black instead of red — the second line had nothing left to colour. XLibur now holds such a colour until the edge is given a line style, and applies it then, so the two lines give the same result in either order. Setting the colour on the outside or inside of a range in one call, before the matching line style, still loses the colour as before; set the line style first for those. ([#379](https://github.com/XLibur/XLibur/pull/379) by [@jafin](https://github.com/jafin))
+
+- **An out-of-range enum value cast into a border or colour property is rejected instead of silently becoming a different one.** Border line style, colour kind, and theme colour are each stored in a single byte to keep a style small. Casting an invalid value into one of the public enums that back them — `(XLBorderStyleValues)999`, for example — used to wrap around into whichever defined member the value happened to reduce to, silently applying a style or colour you never asked for. XLibur now rejects such a value with `ArgumentOutOfRangeException` instead. ([#379](https://github.com/XLibur/XLibur/pull/379) by [@jafin](https://github.com/jafin))
+
+- **An out-of-range enum value cast into an alignment property is rejected too, where XLibur can tell.** `XLAlignmentHorizontalValues`, `XLAlignmentVerticalValues` and `XLAlignmentReadingOrderValues` were already declared to fit in a byte, rather than narrowed into one the way the border and colour enums above are, so most invalid values now throw `ArgumentOutOfRangeException` the same way. One case cannot be caught by any check: a cast that wraps around onto a real member — `(XLAlignmentHorizontalValues)262`, which wraps to `Left` — is, by the time XLibur sees it, genuinely that member, indistinguishable from a caller who passed `Left` directly. That gap exists only for these three alignment enums, not the border or colour ones, because their narrowing happens inside the caller's own cast rather than inside XLibur. ([#379](https://github.com/XLibur/XLibur/pull/379) by [@jafin](https://github.com/jafin))
 
 ## v0.310.0 - 2026-08-06
 

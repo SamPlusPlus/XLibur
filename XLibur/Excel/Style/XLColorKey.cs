@@ -3,17 +3,141 @@ using System.Drawing;
 
 namespace XLibur.Excel;
 
+/// <summary>
+/// The identity of a colour: which kind of colour it is, plus the one payload that kind carries.
+/// </summary>
+/// <remarks>
+/// The four colour kinds are mutually exclusive - <see cref="Equals(XLColorKey)"/> and
+/// <see cref="GetHashCode"/> switch on <see cref="ColorType"/> and read exactly one payload - so the
+/// payload is stored once, in a single 8-byte field reinterpreted per kind, rather than as one field
+/// per kind. Only <see cref="XLColorType.Theme"/> needs a second component, and
+/// <see cref="ThemeColor"/> is small enough to sit outside the union.
+/// <para>
+/// That matters because this struct is embedded five times in <c>XLBorderKey</c>, twice in
+/// <c>XLFillKey</c> and once in <c>XLFontKey</c>, so its size is multiplied through the whole style
+/// key. Holding a <see cref="System.Drawing.Color"/> - 24 bytes, of which the key only ever consumes
+/// the 4 ARGB bytes - alongside separate <c>Indexed</c>, <c>ThemeColor</c> and <c>ThemeTint</c>
+/// fields cost 48 bytes and made <c>XLStyleKey</c> 536 bytes. Storing the ARGB value instead, over a
+/// union, brings this type to 16 bytes and <c>XLStyleKey</c> to 264.
+/// </para>
+/// <para>
+/// Because a payload write depends on the kind, instances are built through the factory methods
+/// rather than an object initialiser: two initialiser assignments would write the same field and the
+/// second would silently win.
+/// </para>
+/// </remarks>
 internal readonly struct XLColorKey : IEquatable<XLColorKey>
 {
-    public XLColorType ColorType { get; init; }
+    /// <summary>
+    /// The ARGB value, the palette index, or the raw bits of the theme tint, selected by
+    /// <see cref="_colorType"/>. Unused for <see cref="XLColorType.Automatic"/>, which carries no
+    /// value of its own.
+    /// </summary>
+    private readonly ulong _payload;
 
-    public Color Color { get; init; }
+    /// <summary>
+    /// <see cref="XLColorType"/> narrowed to a byte. The enum is public and stays <c>int</c>-backed;
+    /// widening happens at the property boundary.
+    /// </summary>
+    private readonly byte _colorType;
 
-    public int Indexed { get; init; }
+    /// <summary><see cref="XLThemeColor"/> narrowed to a byte, on the same terms as <see cref="_colorType"/>.</summary>
+    private readonly byte _themeColor;
 
-    public XLThemeColor ThemeColor { get; init; }
+    /// <remarks>
+    /// Every current call site passes a literal <see cref="XLColorType"/>, so only
+    /// <paramref name="themeColor"/> - reachable from a caller-supplied value through the public
+    /// <see cref="XLColor.FromTheme(XLThemeColor)"/> - is truly at risk of an out-of-range cast. Both
+    /// are checked, so a future call site that stops passing a literal does not silently reopen the
+    /// gap: an unchecked narrowing would wrap an invalid value into whichever defined member it
+    /// happens to reduce to mod 256, substituting one colour kind for another rather than failing
+    /// where the bad value was introduced.
+    /// </remarks>
+    private XLColorKey(ulong payload, XLColorType colorType, XLThemeColor themeColor)
+    {
+        _payload = payload;
+        _colorType = ToByte(colorType);
+        _themeColor = ToByte(themeColor);
+    }
 
-    public double ThemeTint { get; init; }
+    private static byte ToByte(XLColorType colorType)
+    {
+        var raw = (int)colorType;
+        if ((uint)raw > byte.MaxValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(colorType), colorType,
+                $"{nameof(XLColorType)} value {raw} does not fit in the byte a colour kind is stored in.");
+        }
+
+        return (byte)raw;
+    }
+
+    private static byte ToByte(XLThemeColor themeColor)
+    {
+        var raw = (int)themeColor;
+        if ((uint)raw > byte.MaxValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(themeColor), themeColor,
+                $"{nameof(XLThemeColor)} value {raw} does not fit in the byte a theme colour is stored in.");
+        }
+
+        return (byte)raw;
+    }
+
+    /// <summary>
+    /// The automatic colour. Identical to <c>default</c>: <see cref="XLColorType.Automatic"/> is the
+    /// first enum member, so a zeroed key already describes itself as automatic.
+    /// </summary>
+    public static XLColorKey Automatic => default;
+
+    public static XLColorKey FromColor(Color color) => FromArgb(unchecked((uint)color.ToArgb()));
+
+    public static XLColorKey FromArgb(uint argb) => new(argb, XLColorType.Color, default);
+
+    public static XLColorKey FromIndex(int index) => new(unchecked((uint)index), XLColorType.Indexed, default);
+
+    public static XLColorKey FromTheme(XLThemeColor themeColor) => FromTheme(themeColor, 0d);
+
+    public static XLColorKey FromTheme(XLThemeColor themeColor, double themeTint) =>
+        new(unchecked((ulong)BitConverter.DoubleToInt64Bits(themeTint)), XLColorType.Theme, themeColor);
+
+    public XLColorType ColorType => (XLColorType)_colorType;
+
+    /// <summary>
+    /// The colour as an ARGB value. Only meaningful when <see cref="ColorType"/> is
+    /// <see cref="XLColorType.Color"/>.
+    /// </summary>
+    public uint Argb => (uint)_payload;
+
+    /// <summary>
+    /// The colour. Only meaningful when <see cref="ColorType"/> is <see cref="XLColorType.Color"/>.
+    /// </summary>
+    /// <remarks>
+    /// Rebuilt from the stored ARGB value, so it is never a <em>known</em> colour:
+    /// <c>Color.Red</c> in gives a colour equal to <c>Color.FromArgb(255, 255, 0, 0)</c> back, whose
+    /// <see cref="Color.Name"/> is its hex digits and whose <see cref="Color.IsNamedColor"/> is
+    /// false. Everything the library does with a colour goes through the ARGB bytes, and a colour
+    /// read out of a spreadsheet has no name to preserve in the first place.
+    /// </remarks>
+    public Color Color => Color.FromArgb(unchecked((int)(uint)_payload));
+
+    /// <summary>
+    /// The palette index. Only meaningful when <see cref="ColorType"/> is
+    /// <see cref="XLColorType.Indexed"/>.
+    /// </summary>
+    public int Indexed => unchecked((int)(uint)_payload);
+
+    /// <summary>
+    /// The theme colour. Only meaningful when <see cref="ColorType"/> is
+    /// <see cref="XLColorType.Theme"/>.
+    /// </summary>
+    public XLThemeColor ThemeColor => (XLThemeColor)_themeColor;
+
+    /// <summary>
+    /// The theme tint. Only meaningful when <see cref="ColorType"/> is
+    /// <see cref="XLColorType.Theme"/>.
+    /// </summary>
+    public double ThemeTint => BitConverter.Int64BitsToDouble(unchecked((long)_payload));
 
     /// <summary>
     /// True when no color was stated and the application resolves one from context. Unlike
@@ -45,7 +169,7 @@ internal readonly struct XLColorKey : IEquatable<XLColorKey>
                     break;
 
                 case XLColorType.Color:
-                    hash = (hash * 397) ^ Color.ToArgb();
+                    hash = (hash * 397) ^ (int)Argb;
                     break;
                 default:
                     hash = (hash * 397) ^ Indexed;
@@ -58,7 +182,7 @@ internal readonly struct XLColorKey : IEquatable<XLColorKey>
 
     public bool Equals(XLColorKey other)
     {
-        if (ColorType != other.ColorType) return false;
+        if (_colorType != other._colorType) return false;
         switch (ColorType)
         {
             case XLColorType.Automatic:
@@ -66,13 +190,14 @@ internal readonly struct XLColorKey : IEquatable<XLColorKey>
                 return true;
 
             case XLColorType.Color:
-                return Color.ToArgb() == other.Color.ToArgb();
+                return Argb == other.Argb;
             case XLColorType.Theme:
-                if (ThemeColor != other.ThemeColor)
+                if (_themeColor != other._themeColor)
                     return false;
 
-                // Fast path for identical stored double values without floating-point ==.
-                if (BitConverter.DoubleToInt64Bits(ThemeTint) == BitConverter.DoubleToInt64Bits(other.ThemeTint))
+                // Fast path for identical stored double values without floating-point ==. The tint
+                // is held as its raw bits, so this is the payload comparison itself.
+                if (_payload == other._payload)
                     return true;
 
                 return Math.Abs(ThemeTint - other.ThemeTint) < XLHelper.Epsilon;
