@@ -3,6 +3,7 @@
 ## Contents
 
 - [Unreleased](#unreleased)
+- [v0.311.1](#v03111---2026-08-11)
 - [v0.311.0](#v03110---2026-08-08)
 - [v0.310.0](#v03100---2026-08-06)
 - [v0.301.0](#v03010---2026-08-04)
@@ -12,6 +13,8 @@
 - [v0.106.0](#v01060---2026-07-25)
 
 ## Unreleased
+
+## v0.311.1 - 2026-08-11
 
 A dependency release: `XLibur.Fonts.SkiaSharp` moves to SkiaSharp 4.151.1, a patch bump. No new features, no bug fixes and no breaking changes.
 
