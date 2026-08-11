@@ -12,28 +12,12 @@ XLibur is a .NET 8+ library for reading, manipulating, and writing Excel 2007+ (
 It provides an intuitive interface over the underlying
 [OpenXML](https://github.com/OfficeDev/Open-XML-SDK) API.
 
-XLibur forked [ClosedXML v0.105.0](https://github.com/ClosedXML/ClosedXML/), applied patches and improvements that didn't land upstream. Namespaces are prefixed with `XLibur`.
+XLibur forked [ClosedXML v0.105.0](https://github.com/ClosedXML/ClosedXML/), to apply patches and improvements that didn't land upstream. Namespaces are prefixed with `XLibur`.
 
 📖 **[Documentation](https://xlibur.github.io/XLibur/)** ·
 [Getting Started](https://xlibur.github.io/XLibur/getting-started) ·
 [Migration from ClosedXML](#migration-from-closedxml) ·
 [Benchmarks](https://jafin.github.io/XLBench/charts.html)
-
-## Should I use this?
-
-**Consider XLibur if** you want any of the following over ClosedXML 0.105:
-
-- **Reduced memory usage and performance gains** — particularly for workbooks with many formatted
-  cells. See the [published benchmarks](https://jafin.github.io/XLBench/charts.html).
-- **Bug fixes** — several outstanding community issues resolved that are still pending upstream.
-- **Community contributions** — several community PRs and enhancement requests have been merged into
-  this codebase.
-
-**Continue with ClosedXML if:**
-
-- You need netstandard2.0 or .NET Framework 4.7.2 support. XLibur targets .NET 8 and above.
-- You want a library with a longer track record and a larger pool of maintainers who have worked on
-  it for years.
 
 ## Install
 
@@ -121,6 +105,23 @@ Published results are available at
 ## Contributing
 
 Building, testing, and developer guidelines are in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Should I use this?
+
+**Consider XLibur if** you want any of the following over ClosedXML 0.105:
+
+- **Reduced memory usage and performance gains** — particularly for workbooks with many formatted
+  cells. See the [published benchmarks](https://jafin.github.io/XLBench/charts.html).
+- **Bug fixes** — several outstanding community issues resolved that are still pending upstream.
+- **Community contributions** — several community PRs and enhancement requests have been merged into
+  this codebase.
+
+**Continue with ClosedXML if:**
+
+- You need netstandard2.0 or .NET Framework 4.7.2 support. XLibur targets .NET 8 and above.
+- You want a library with a longer track record and a larger pool of maintainers who have worked on
+  it for years.
+
 
 ## License
 
